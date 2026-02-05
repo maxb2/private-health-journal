@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.BrunchDining
 import androidx.compose.material.icons.filled.Cookie
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DinnerDining
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FreeBreakfast
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AssistChip
@@ -46,6 +47,7 @@ import java.util.Locale
 fun MealEntryCard(
     meal: MealWithDetails,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -123,12 +125,23 @@ fun MealEntryCard(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                )
+            Column {
+                if (onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }
@@ -142,6 +155,7 @@ fun SymptomEntryCard(
     startTime: Long,
     endTime: Long?,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -193,12 +207,23 @@ fun SymptomEntryCard(
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
-                )
+            Column {
+                if (onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }
@@ -208,6 +233,7 @@ fun SymptomEntryCard(
 fun BowelMovementCard(
     entry: BowelMovementEntry,
     onDelete: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val bristolType = BristolType.fromInt(entry.bristolType)
@@ -269,12 +295,23 @@ fun BowelMovementCard(
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
-                )
+            Column {
+                if (onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }

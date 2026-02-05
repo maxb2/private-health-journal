@@ -49,7 +49,10 @@ fun HomeScreen(
     onAddMeal: () -> Unit,
     onAddSymptom: () -> Unit,
     onAddBowelMovement: () -> Unit,
-    onViewHistory: () -> Unit
+    onViewHistory: () -> Unit,
+    onEditMeal: (Long) -> Unit = {},
+    onEditSymptom: (Long) -> Unit = {},
+    onEditBowelMovement: (Long) -> Unit = {}
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
@@ -194,7 +197,8 @@ fun HomeScreen(
                         when (item) {
                             is EntryItem.Meal -> MealEntryCard(
                                 meal = item.entry,
-                                onDelete = { viewModel.deleteMeal(item.entry) }
+                                onDelete = { viewModel.deleteMeal(item.entry) },
+                                onEdit = { onEditMeal(item.entry.meal.id) }
                             )
                             is EntryItem.Symptom -> SymptomEntryCard(
                                 name = item.entry.name,
@@ -202,11 +206,13 @@ fun HomeScreen(
                                 notes = item.entry.notes,
                                 startTime = item.entry.startTime,
                                 endTime = item.entry.endTime,
-                                onDelete = { viewModel.deleteSymptom(item.entry) }
+                                onDelete = { viewModel.deleteSymptom(item.entry) },
+                                onEdit = { onEditSymptom(item.entry.id) }
                             )
                             is EntryItem.BowelMovement -> BowelMovementCard(
                                 entry = item.entry,
-                                onDelete = { viewModel.deleteBowelMovement(item.entry) }
+                                onDelete = { viewModel.deleteBowelMovement(item.entry) },
+                                onEdit = { onEditBowelMovement(item.entry.id) }
                             )
                         }
                     }

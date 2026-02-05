@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.foodsymptomlog.data.entity.SymptomEntry
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,12 @@ interface SymptomEntryDao {
 
     @Insert
     suspend fun insert(symptomEntry: SymptomEntry): Long
+
+    @Update
+    suspend fun update(symptomEntry: SymptomEntry)
+
+    @Query("SELECT * FROM symptom_entries WHERE id = :id")
+    suspend fun getById(id: Long): SymptomEntry?
 
     @Query("UPDATE symptom_entries SET endTime = :endTime WHERE id = :id")
     suspend fun updateEndTime(id: Long, endTime: Long)

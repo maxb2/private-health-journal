@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.foodsymptomlog.data.entity.FoodItem
 import com.foodsymptomlog.data.entity.MealEntry
 import com.foodsymptomlog.data.entity.MealTagCrossRef
@@ -25,11 +26,24 @@ interface MealDao {
     @Insert
     suspend fun insertMeal(meal: MealEntry): Long
 
+    @Update
+    suspend fun updateMeal(meal: MealEntry)
+
+    @Transaction
+    @Query("SELECT * FROM meal_entries WHERE id = :id")
+    suspend fun getMealWithDetailsById(id: Long): MealWithDetails?
+
     @Insert
     suspend fun insertFoodItem(foodItem: FoodItem): Long
 
     @Insert
     suspend fun insertFoodItems(foodItems: List<FoodItem>)
+
+    @Query("DELETE FROM food_items WHERE mealId = :mealId")
+    suspend fun deleteFoodItemsByMealId(mealId: Long)
+
+    @Query("DELETE FROM meal_tag_cross_ref WHERE mealId = :mealId")
+    suspend fun deleteMealTagCrossRefsByMealId(mealId: Long)
 
     @Insert
     suspend fun insertTag(tag: Tag): Long
@@ -69,5 +83,29 @@ interface MealDao {
         }
 
         return mealId
+    }
+
+    @Transaction
+    suspend fun updateMealWithDetails(
+        meal: MealEntry,
+        foods: List<String>,
+        tagNames: List<String>
+    ) {
+        updateMeal(meal)
+
+        // Delete existing food items and tags for this meal
+        deleteFoodItemsByMealId(meal.id)
+        deleteMealTagCrossRefsByMealId(meal.id)
+
+        // Re-insert food items
+        val foodItems = foods.map { FoodItem(mealId = meal.id, name = it) }
+        insertFoodItems(foodItems)
+
+        // Re-insert tags
+        for (tagName in tagNames) {
+            val existingTag = getTagByName(tagName)
+            val tagId = existingTag?.id ?: insertTag(Tag(name = tagName))
+            insertMealTagCrossRef(MealTagCrossRef(mealId = meal.id, tagId = tagId))
+        }
     }
 }

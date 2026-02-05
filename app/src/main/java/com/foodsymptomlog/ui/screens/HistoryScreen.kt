@@ -45,7 +45,10 @@ enum class FilterType {
 @Composable
 fun HistoryScreen(
     viewModel: LogViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onEditMeal: (Long) -> Unit = {},
+    onEditSymptom: (Long) -> Unit = {},
+    onEditBowelMovement: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -144,7 +147,8 @@ fun HistoryScreen(
                         when (entry) {
                             is HistoryEntry.Meal -> MealEntryCard(
                                 meal = entry.entry,
-                                onDelete = { viewModel.deleteMeal(entry.entry) }
+                                onDelete = { viewModel.deleteMeal(entry.entry) },
+                                onEdit = { onEditMeal(entry.entry.meal.id) }
                             )
                             is HistoryEntry.Symptom -> SymptomEntryCard(
                                 name = entry.entry.name,
@@ -152,11 +156,13 @@ fun HistoryScreen(
                                 notes = entry.entry.notes,
                                 startTime = entry.entry.startTime,
                                 endTime = entry.entry.endTime,
-                                onDelete = { viewModel.deleteSymptom(entry.entry) }
+                                onDelete = { viewModel.deleteSymptom(entry.entry) },
+                                onEdit = { onEditSymptom(entry.entry.id) }
                             )
                             is HistoryEntry.BowelMovement -> BowelMovementCard(
                                 entry = entry.entry,
-                                onDelete = { viewModel.deleteBowelMovement(entry.entry) }
+                                onDelete = { viewModel.deleteBowelMovement(entry.entry) },
+                                onEdit = { onEditBowelMovement(entry.entry.id) }
                             )
                         }
                     }

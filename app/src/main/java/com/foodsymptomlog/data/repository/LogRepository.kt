@@ -38,9 +38,10 @@ class LogRepository(
         mealType: MealType,
         foods: List<String>,
         tags: List<String>,
-        notes: String = ""
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
     ): Long {
-        val meal = MealEntry(mealType = mealType, notes = notes)
+        val meal = MealEntry(mealType = mealType, notes = notes, timestamp = timestamp)
         return mealDao.insertMealWithDetails(meal, foods, tags)
     }
 
@@ -78,5 +79,35 @@ class LogRepository(
 
     suspend fun deleteBowelMovementById(id: Long) {
         bowelMovementDao.deleteById(id)
+    }
+
+    // Update methods
+    suspend fun updateSymptom(symptomEntry: SymptomEntry) {
+        symptomEntryDao.update(symptomEntry)
+    }
+
+    suspend fun updateBowelMovement(entry: BowelMovementEntry) {
+        bowelMovementDao.update(entry)
+    }
+
+    suspend fun updateMeal(
+        meal: MealEntry,
+        foods: List<String>,
+        tags: List<String>
+    ) {
+        mealDao.updateMealWithDetails(meal, foods, tags)
+    }
+
+    // Get by ID methods
+    suspend fun getSymptomById(id: Long): SymptomEntry? {
+        return symptomEntryDao.getById(id)
+    }
+
+    suspend fun getBowelMovementById(id: Long): BowelMovementEntry? {
+        return bowelMovementDao.getById(id)
+    }
+
+    suspend fun getMealWithDetailsById(id: Long): MealWithDetails? {
+        return mealDao.getMealWithDetailsById(id)
     }
 }

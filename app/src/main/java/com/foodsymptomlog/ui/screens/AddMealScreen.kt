@@ -38,9 +38,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,35 +50,67 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.foodsymptomlog.data.entity.MealEntry
 import com.foodsymptomlog.data.entity.MealType
+import com.foodsymptomlog.ui.components.DateTimePicker
 import com.foodsymptomlog.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddMealScreen(
     viewModel: LogViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    editId: Long? = null
 ) {
+    val editingMeal by viewModel.editingMeal.collectAsState()
+    val isEditMode = editId != null
+
     var selectedMealType by remember { mutableStateOf(MealType.BREAKFAST) }
     val foods = remember { mutableStateListOf<String>() }
     var currentFood by remember { mutableStateOf("") }
     val tags = remember { mutableStateListOf<String>() }
     var currentTag by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by remember { mutableStateOf<Long?>(null) }
 
     val existingTags by viewModel.allTags.collectAsState()
+
+    // Load existing entry for editing
+    LaunchedEffect(editId) {
+        if (editId != null) {
+            viewModel.loadMealForEditing(editId)
+        }
+    }
+
+    // Populate fields when editing entry is loaded
+    LaunchedEffect(editingMeal) {
+        editingMeal?.let { mealWithDetails ->
+            selectedMealType = mealWithDetails.meal.mealType
+            foods.clear()
+            foods.addAll(mealWithDetails.foods.map { it.name })
+            tags.clear()
+            tags.addAll(mealWithDetails.tags.map { it.name })
+            notes = mealWithDetails.meal.notes
+            timestamp = mealWithDetails.meal.timestamp
+            existingId = mealWithDetails.meal.id
+        }
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Log Meal",
+                        if (isEditMode) "Edit Meal" else "Log Meal",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        viewModel.clearEditingState()
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -303,6 +337,15 @@ fun AddMealScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Date/Time Section
+            DateTimePicker(
+                timestamp = timestamp,
+                onTimestampChange = { timestamp = it },
+                label = "Date & Time"
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Notes
             OutlinedTextField(
                 value = notes,
@@ -320,19 +363,34 @@ fun AddMealScreen(
             Button(
                 onClick = {
                     if (foods.isNotEmpty()) {
-                        viewModel.addMeal(
-                            mealType = selectedMealType,
-                            foods = foods.toList(),
-                            tags = tags.toList(),
-                            notes = notes.trim()
-                        )
+                        if (isEditMode && existingId != null) {
+                            viewModel.updateMeal(
+                                meal = MealEntry(
+                                    id = existingId!!,
+                                    mealType = selectedMealType,
+                                    notes = notes.trim(),
+                                    timestamp = timestamp
+                                ),
+                                foods = foods.toList(),
+                                tags = tags.toList()
+                            )
+                        } else {
+                            viewModel.addMeal(
+                                mealType = selectedMealType,
+                                foods = foods.toList(),
+                                tags = tags.toList(),
+                                notes = notes.trim(),
+                                timestamp = timestamp
+                            )
+                        }
+                        viewModel.clearEditingState()
                         onNavigateBack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = foods.isNotEmpty()
             ) {
-                Text("Save Meal")
+                Text(if (isEditMode) "Update Meal" else "Save Meal")
             }
         }
     }

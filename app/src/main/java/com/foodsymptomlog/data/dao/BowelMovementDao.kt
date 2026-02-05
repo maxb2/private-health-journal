@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.foodsymptomlog.data.entity.BowelMovementEntry
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +18,12 @@ interface BowelMovementDao {
 
     @Insert
     suspend fun insert(entry: BowelMovementEntry): Long
+
+    @Update
+    suspend fun update(entry: BowelMovementEntry)
+
+    @Query("SELECT * FROM bowel_movement_entries WHERE id = :id")
+    suspend fun getById(id: Long): BowelMovementEntry?
 
     @Delete
     suspend fun delete(entry: BowelMovementEntry)

@@ -30,8 +30,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,31 +42,58 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.foodsymptomlog.data.entity.BowelMovementEntry
 import com.foodsymptomlog.data.entity.BristolType
+import com.foodsymptomlog.ui.components.DateTimePicker
 import com.foodsymptomlog.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBowelMovementScreen(
     viewModel: LogViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    editId: Long? = null
 ) {
+    val editingBowelMovement by viewModel.editingBowelMovement.collectAsState()
+    val isEditMode = editId != null
+
     var selectedType by remember { mutableIntStateOf(4) }
     var notes by remember { mutableStateOf("") }
+    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by remember { mutableStateOf<Long?>(null) }
+
+    // Load existing entry for editing
+    LaunchedEffect(editId) {
+        if (editId != null) {
+            viewModel.loadBowelMovementForEditing(editId)
+        }
+    }
+
+    // Populate fields when editing entry is loaded
+    LaunchedEffect(editingBowelMovement) {
+        editingBowelMovement?.let { entry ->
+            selectedType = entry.bristolType
+            notes = entry.notes
+            timestamp = entry.timestamp
+            existingId = entry.id
+        }
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Log Bowel Movement",
+                        if (isEditMode) "Edit Bowel Movement" else "Log Bowel Movement",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        viewModel.clearEditingState()
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -110,6 +140,15 @@ fun AddBowelMovementScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Date/Time Section
+            DateTimePicker(
+                timestamp = timestamp,
+                onTimestampChange = { timestamp = it },
+                label = "Date & Time"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -125,7 +164,19 @@ fun AddBowelMovementScreen(
 
             Button(
                 onClick = {
-                    viewModel.addBowelMovement(selectedType, notes.trim())
+                    if (isEditMode && existingId != null) {
+                        viewModel.updateBowelMovement(
+                            BowelMovementEntry(
+                                id = existingId!!,
+                                bristolType = selectedType,
+                                notes = notes.trim(),
+                                timestamp = timestamp
+                            )
+                        )
+                    } else {
+                        viewModel.addBowelMovement(selectedType, notes.trim(), timestamp)
+                    }
+                    viewModel.clearEditingState()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -133,7 +184,7 @@ fun AddBowelMovementScreen(
                     containerColor = MaterialTheme.colorScheme.tertiary
                 )
             ) {
-                Text("Save Entry")
+                Text(if (isEditMode) "Update Entry" else "Save Entry")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
