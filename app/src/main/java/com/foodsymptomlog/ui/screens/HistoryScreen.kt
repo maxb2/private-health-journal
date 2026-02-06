@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -38,6 +39,10 @@ import com.foodsymptomlog.ui.components.MedicationCard
 import com.foodsymptomlog.ui.components.OtherEntryCard
 import com.foodsymptomlog.ui.components.SymptomEntryCard
 import com.foodsymptomlog.viewmodel.LogViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 enum class FilterType {
     ALL, MEALS, SYMPTOMS, OTHER, MEDICATIONS
@@ -151,36 +156,75 @@ fun HistoryScreen(
                     )
                 }
             } else {
+                // Group entries by day
+                val entriesByDay = filteredEntries.groupBy { entry ->
+                    Instant.ofEpochMilli(entry.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+                }
+
+                val today = LocalDate.now()
+                val yesterday = today.minusDays(1)
+                val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+
                 LazyColumn(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(filteredEntries) { entry ->
-                        when (entry) {
-                            is HistoryEntry.Meal -> MealEntryCard(
-                                meal = entry.entry,
-                                onDelete = { viewModel.deleteMeal(entry.entry) },
-                                onEdit = { onEditMeal(entry.entry.meal.id) }
-                            )
-                            is HistoryEntry.Symptom -> SymptomEntryCard(
-                                name = entry.entry.name,
-                                severity = entry.entry.severity,
-                                notes = entry.entry.notes,
-                                startTime = entry.entry.startTime,
-                                endTime = entry.entry.endTime,
-                                onDelete = { viewModel.deleteSymptom(entry.entry) },
-                                onEdit = { onEditSymptom(entry.entry.id) }
-                            )
-                            is HistoryEntry.Other -> OtherEntryCard(
-                                entry = entry.entry,
-                                onDelete = { viewModel.deleteOtherEntry(entry.entry) },
-                                onEdit = { onEditOther(entry.entry.id) }
-                            )
-                            is HistoryEntry.Medication -> MedicationCard(
-                                entry = entry.entry,
-                                onDelete = { viewModel.deleteMedication(entry.entry) },
-                                onEdit = { onEditMedication(entry.entry.id) }
-                            )
+                    entriesByDay.forEach { (date, entries) ->
+                        item {
+                            val dayLabel = when (date) {
+                                today -> "Today"
+                                yesterday -> "Yesterday"
+                                else -> date.format(dateFormatter)
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Divider(
+                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                Text(
+                                    text = dayLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                )
+                                Divider(
+                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            }
+                        }
+                        items(entries) { entry ->
+                            when (entry) {
+                                is HistoryEntry.Meal -> MealEntryCard(
+                                    meal = entry.entry,
+                                    onDelete = { viewModel.deleteMeal(entry.entry) },
+                                    onEdit = { onEditMeal(entry.entry.meal.id) }
+                                )
+                                is HistoryEntry.Symptom -> SymptomEntryCard(
+                                    name = entry.entry.name,
+                                    severity = entry.entry.severity,
+                                    notes = entry.entry.notes,
+                                    startTime = entry.entry.startTime,
+                                    endTime = entry.entry.endTime,
+                                    onDelete = { viewModel.deleteSymptom(entry.entry) },
+                                    onEdit = { onEditSymptom(entry.entry.id) }
+                                )
+                                is HistoryEntry.Other -> OtherEntryCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteOtherEntry(entry.entry) },
+                                    onEdit = { onEditOther(entry.entry.id) }
+                                )
+                                is HistoryEntry.Medication -> MedicationCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteMedication(entry.entry) },
+                                    onEdit = { onEditMedication(entry.entry.id) }
+                                )
+                            }
                         }
                     }
                 }

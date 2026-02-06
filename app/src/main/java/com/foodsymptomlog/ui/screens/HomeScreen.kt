@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -46,6 +47,10 @@ import com.foodsymptomlog.ui.components.MedicationCard
 import com.foodsymptomlog.ui.components.OtherEntryCard
 import com.foodsymptomlog.ui.components.SymptomEntryCard
 import com.foodsymptomlog.viewmodel.LogViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,35 +243,80 @@ fun HomeScreen(
                     }
                     .take(10)
 
+                // Group entries by day
+                val entriesByDay = combinedEntries.groupBy { item ->
+                    val timestamp = when (item) {
+                        is EntryItem.Meal -> item.entry.meal.timestamp
+                        is EntryItem.Symptom -> item.entry.timestamp
+                        is EntryItem.Medication -> item.entry.timestamp
+                        is EntryItem.Other -> item.entry.timestamp
+                    }
+                    Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+                }
+
+                val today = LocalDate.now()
+                val yesterday = today.minusDays(1)
+                val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(combinedEntries) { item ->
-                        when (item) {
-                            is EntryItem.Meal -> MealEntryCard(
-                                meal = item.entry,
-                                onDelete = { viewModel.deleteMeal(item.entry) },
-                                onEdit = { onEditMeal(item.entry.meal.id) }
-                            )
-                            is EntryItem.Symptom -> SymptomEntryCard(
-                                name = item.entry.name,
-                                severity = item.entry.severity,
-                                notes = item.entry.notes,
-                                startTime = item.entry.startTime,
-                                endTime = item.entry.endTime,
-                                onDelete = { viewModel.deleteSymptom(item.entry) },
-                                onEdit = { onEditSymptom(item.entry.id) }
-                            )
-                            is EntryItem.Other -> OtherEntryCard(
-                                entry = item.entry,
-                                onDelete = { viewModel.deleteOtherEntry(item.entry) },
-                                onEdit = { onEditOther(item.entry.id) }
-                            )
-                            is EntryItem.Medication -> MedicationCard(
-                                entry = item.entry,
-                                onDelete = { viewModel.deleteMedication(item.entry) },
-                                onEdit = { onEditMedication(item.entry.id) }
-                            )
+                    entriesByDay.forEach { (date, entries) ->
+                        item {
+                            val dayLabel = when (date) {
+                                today -> "Today"
+                                yesterday -> "Yesterday"
+                                else -> date.format(dateFormatter)
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Divider(
+                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                Text(
+                                    text = dayLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                )
+                                Divider(
+                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            }
+                        }
+                        items(entries) { item ->
+                            when (item) {
+                                is EntryItem.Meal -> MealEntryCard(
+                                    meal = item.entry,
+                                    onDelete = { viewModel.deleteMeal(item.entry) },
+                                    onEdit = { onEditMeal(item.entry.meal.id) }
+                                )
+                                is EntryItem.Symptom -> SymptomEntryCard(
+                                    name = item.entry.name,
+                                    severity = item.entry.severity,
+                                    notes = item.entry.notes,
+                                    startTime = item.entry.startTime,
+                                    endTime = item.entry.endTime,
+                                    onDelete = { viewModel.deleteSymptom(item.entry) },
+                                    onEdit = { onEditSymptom(item.entry.id) }
+                                )
+                                is EntryItem.Other -> OtherEntryCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteOtherEntry(item.entry) },
+                                    onEdit = { onEditOther(item.entry.id) }
+                                )
+                                is EntryItem.Medication -> MedicationCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteMedication(item.entry) },
+                                    onEdit = { onEditMedication(item.entry.id) }
+                                )
+                            }
                         }
                     }
                 }
