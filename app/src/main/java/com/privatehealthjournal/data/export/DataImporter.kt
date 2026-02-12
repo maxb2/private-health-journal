@@ -6,6 +6,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
@@ -28,6 +29,7 @@ object DataImporter {
             var bloodPressureImported = 0
             var cholesterolImported = 0
             var weightImported = 0
+            var spO2Imported = 0
 
             // Import meals
             exportData.meals.forEach { meal ->
@@ -139,6 +141,19 @@ object DataImporter {
                 weightImported++
             }
 
+            // Import SpO2 entries
+            exportData.spO2Entries.forEach { spo2 ->
+                repository.insertSpO2(
+                    SpO2Entry(
+                        spo2 = spo2.spo2,
+                        pulse = spo2.pulse,
+                        notes = spo2.notes,
+                        timestamp = spo2.timestamp
+                    )
+                )
+                spO2Imported++
+            }
+
             ImportResult.Success(
                 mealsImported = mealsImported,
                 symptomsImported = symptomsImported,
@@ -146,7 +161,8 @@ object DataImporter {
                 otherEntriesImported = otherEntriesImported,
                 bloodPressureImported = bloodPressureImported,
                 cholesterolImported = cholesterolImported,
-                weightImported = weightImported
+                weightImported = weightImported,
+                spO2Imported = spO2Imported
             )
         } catch (e: Exception) {
             ImportResult.Error("Failed to import: ${e.message}")
@@ -162,11 +178,12 @@ sealed class ImportResult {
         val otherEntriesImported: Int,
         val bloodPressureImported: Int = 0,
         val cholesterolImported: Int = 0,
-        val weightImported: Int = 0
+        val weightImported: Int = 0,
+        val spO2Imported: Int = 0
     ) : ImportResult() {
         val totalImported: Int
             get() = mealsImported + symptomsImported + medicationsImported + otherEntriesImported +
-                    bloodPressureImported + cholesterolImported + weightImported
+                    bloodPressureImported + cholesterolImported + weightImported + spO2Imported
     }
 
     data class Error(val message: String) : ImportResult()

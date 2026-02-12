@@ -10,6 +10,7 @@ import com.privatehealthjournal.data.dao.CholesterolDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
+import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
 import com.privatehealthjournal.data.entity.BloodPressureEntry
@@ -20,6 +21,7 @@ import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealTagCrossRef
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -36,9 +38,10 @@ import com.privatehealthjournal.data.entity.WeightEntry
         OtherEntry::class,
         BloodPressureEntry::class,
         CholesterolEntry::class,
-        WeightEntry::class
+        WeightEntry::class,
+        SpO2Entry::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -50,6 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun bloodPressureDao(): BloodPressureDao
     abstract fun cholesterolDao(): CholesterolDao
     abstract fun weightDao(): WeightDao
+    abstract fun spO2Dao(): SpO2Dao
 
     companion object {
         @Volatile

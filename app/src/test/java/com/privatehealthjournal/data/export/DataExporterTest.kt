@@ -34,7 +34,7 @@ class DataExporterTest {
         )
 
         val result = gson.fromJson(json, ExportData::class.java)
-        assertThat(result.version).isEqualTo(2)
+        assertThat(result.version).isEqualTo(3)
         assertThat(result.exportedAt).isGreaterThan(0L)
     }
 

@@ -6,6 +6,7 @@ import com.privatehealthjournal.data.dao.CholesterolDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
+import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
 import com.privatehealthjournal.data.entity.BloodPressureEntry
@@ -16,6 +17,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -29,7 +31,8 @@ class LogRepository(
     private val otherEntryDao: OtherEntryDao,
     private val bloodPressureDao: BloodPressureDao,
     private val cholesterolDao: CholesterolDao,
-    private val weightDao: WeightDao
+    private val weightDao: WeightDao,
+    private val spO2Dao: SpO2Dao
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -42,6 +45,7 @@ class LogRepository(
     val allBloodPressureEntries: Flow<List<BloodPressureEntry>> = bloodPressureDao.getAllBloodPressureEntries()
     val allCholesterolEntries: Flow<List<CholesterolEntry>> = cholesterolDao.getAllCholesterolEntries()
     val allWeightEntries: Flow<List<WeightEntry>> = weightDao.getAllWeightEntries()
+    val allSpO2Entries: Flow<List<SpO2Entry>> = spO2Dao.getAllSpO2Entries()
 
     fun getRecentMeals(limit: Int = 5): Flow<List<MealWithDetails>> {
         return mealDao.getRecentMealsWithDetails(limit)
@@ -73,6 +77,10 @@ class LogRepository(
 
     fun getRecentWeightEntries(limit: Int = 5): Flow<List<WeightEntry>> {
         return weightDao.getRecentWeightEntries(limit)
+    }
+
+    fun getRecentSpO2Entries(limit: Int = 5): Flow<List<SpO2Entry>> {
+        return spO2Dao.getRecentSpO2Entries(limit)
     }
 
     suspend fun insertMeal(
@@ -235,5 +243,22 @@ class LogRepository(
 
     suspend fun getWeightById(id: Long): WeightEntry? {
         return weightDao.getById(id)
+    }
+
+    // SpO2 methods
+    suspend fun insertSpO2(entry: SpO2Entry): Long {
+        return spO2Dao.insert(entry)
+    }
+
+    suspend fun updateSpO2(entry: SpO2Entry) {
+        spO2Dao.update(entry)
+    }
+
+    suspend fun deleteSpO2(entry: SpO2Entry) {
+        spO2Dao.delete(entry)
+    }
+
+    suspend fun getSpO2ById(id: Long): SpO2Entry? {
+        return spO2Dao.getById(id)
     }
 }

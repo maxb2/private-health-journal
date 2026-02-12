@@ -38,6 +38,8 @@ import com.privatehealthjournal.ui.components.BloodPressureChart
 import com.privatehealthjournal.ui.components.BloodPressureSummaryCard
 import com.privatehealthjournal.ui.components.CholesterolChart
 import com.privatehealthjournal.ui.components.CholesterolSummaryCard
+import com.privatehealthjournal.ui.components.SpO2Chart
+import com.privatehealthjournal.ui.components.SpO2SummaryCard
 import com.privatehealthjournal.ui.components.WeightChart
 import com.privatehealthjournal.ui.components.WeightSummaryCard
 import com.privatehealthjournal.ui.utils.TimeRange
@@ -47,7 +49,8 @@ import com.privatehealthjournal.viewmodel.LogViewModel
 enum class BiometricTab(val title: String) {
     WEIGHT("Weight"),
     BLOOD_PRESSURE("Blood Pressure"),
-    CHOLESTEROL("Cholesterol")
+    CHOLESTEROL("Cholesterol"),
+    SPO2("SpO2")
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -62,6 +65,7 @@ fun BiometricsChartScreen(
     val allWeightEntries by viewModel.allWeightEntries.collectAsState()
     val allBloodPressureEntries by viewModel.allBloodPressureEntries.collectAsState()
     val allCholesterolEntries by viewModel.allCholesterolEntries.collectAsState()
+    val allSpO2Entries by viewModel.allSpO2Entries.collectAsState()
 
     val filteredWeightEntries = remember(allWeightEntries, selectedTimeRange) {
         filterByTimeRange(allWeightEntries, selectedTimeRange) { it.timestamp }
@@ -73,6 +77,10 @@ fun BiometricsChartScreen(
 
     val filteredCholesterolEntries = remember(allCholesterolEntries, selectedTimeRange) {
         filterByTimeRange(allCholesterolEntries, selectedTimeRange) { it.timestamp }
+    }
+
+    val filteredSpO2Entries = remember(allSpO2Entries, selectedTimeRange) {
+        filterByTimeRange(allSpO2Entries, selectedTimeRange) { it.timestamp }
     }
 
     Scaffold(
@@ -155,6 +163,11 @@ fun BiometricsChartScreen(
                         CholesterolChart(entries = filteredCholesterolEntries)
                         Spacer(modifier = Modifier.height(16.dp))
                         CholesterolSummaryCard(entries = filteredCholesterolEntries)
+                    }
+                    BiometricTab.SPO2 -> {
+                        SpO2Chart(entries = filteredSpO2Entries)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SpO2SummaryCard(entries = filteredSpO2Entries)
                     }
                 }
             }
