@@ -1,5 +1,6 @@
 package com.foodsymptomlog.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -30,14 +32,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.foodsymptomlog.data.entity.BloodPressureEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealWithDetails
 import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
+import com.foodsymptomlog.data.entity.WeightEntry
+import com.foodsymptomlog.ui.components.BloodPressureCard
+import com.foodsymptomlog.ui.components.CholesterolCard
 import com.foodsymptomlog.ui.components.MealEntryCard
 import com.foodsymptomlog.ui.components.MedicationCard
 import com.foodsymptomlog.ui.components.OtherEntryCard
 import com.foodsymptomlog.ui.components.SymptomEntryCard
+import com.foodsymptomlog.ui.components.WeightCard
 import com.foodsymptomlog.viewmodel.LogViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -45,7 +53,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 enum class FilterType {
-    ALL, MEALS, SYMPTOMS, OTHER, MEDICATIONS
+    ALL, MEALS, SYMPTOMS, OTHER, MEDICATIONS, BIOMETRICS
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,12 +64,18 @@ fun HistoryScreen(
     onEditMeal: (Long) -> Unit = {},
     onEditSymptom: (Long) -> Unit = {},
     onEditOther: (Long) -> Unit = {},
-    onEditMedication: (Long) -> Unit = {}
+    onEditMedication: (Long) -> Unit = {},
+    onEditBloodPressure: (Long) -> Unit = {},
+    onEditCholesterol: (Long) -> Unit = {},
+    onEditWeight: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
     val allMedications by viewModel.allMedications.collectAsState()
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
+    val allBloodPressure by viewModel.allBloodPressureEntries.collectAsState()
+    val allCholesterol by viewModel.allCholesterolEntries.collectAsState()
+    val allWeight by viewModel.allWeightEntries.collectAsState()
     var filterType by remember { mutableStateOf(FilterType.ALL) }
 
     Scaffold(
@@ -94,7 +108,9 @@ fun HistoryScreen(
                 .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
@@ -122,6 +138,11 @@ fun HistoryScreen(
                     onClick = { filterType = FilterType.MEDICATIONS },
                     label = { Text("Meds") }
                 )
+                FilterChip(
+                    selected = filterType == FilterType.BIOMETRICS,
+                    onClick = { filterType = FilterType.BIOMETRICS },
+                    label = { Text("Biometrics") }
+                )
             }
 
             val filteredEntries = when (filterType) {
@@ -129,7 +150,10 @@ fun HistoryScreen(
                     (allMeals.map { HistoryEntry.Meal(it) } +
                             allSymptoms.map { HistoryEntry.Symptom(it) } +
                             allMedications.map { HistoryEntry.Medication(it) } +
-                            allOtherEntries.map { HistoryEntry.Other(it) })
+                            allOtherEntries.map { HistoryEntry.Other(it) } +
+                            allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
+                            allCholesterol.map { HistoryEntry.Cholesterol(it) } +
+                            allWeight.map { HistoryEntry.Weight(it) })
                         .sortedByDescending { it.timestamp }
                 }
                 FilterType.MEALS -> allMeals.map { HistoryEntry.Meal(it) }
@@ -140,6 +164,12 @@ fun HistoryScreen(
                     .sortedByDescending { it.timestamp }
                 FilterType.MEDICATIONS -> allMedications.map { HistoryEntry.Medication(it) }
                     .sortedByDescending { it.timestamp }
+                FilterType.BIOMETRICS -> {
+                    (allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
+                            allCholesterol.map { HistoryEntry.Cholesterol(it) } +
+                            allWeight.map { HistoryEntry.Weight(it) })
+                        .sortedByDescending { it.timestamp }
+                }
             }
 
             if (filteredEntries.isEmpty()) {
@@ -224,6 +254,21 @@ fun HistoryScreen(
                                     onDelete = { viewModel.deleteMedication(entry.entry) },
                                     onEdit = { onEditMedication(entry.entry.id) }
                                 )
+                                is HistoryEntry.BloodPressure -> BloodPressureCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteBloodPressure(entry.entry) },
+                                    onEdit = { onEditBloodPressure(entry.entry.id) }
+                                )
+                                is HistoryEntry.Cholesterol -> CholesterolCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteCholesterol(entry.entry) },
+                                    onEdit = { onEditCholesterol(entry.entry.id) }
+                                )
+                                is HistoryEntry.Weight -> WeightCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteWeight(entry.entry) },
+                                    onEdit = { onEditWeight(entry.entry.id) }
+                                )
                             }
                         }
                     }
@@ -249,6 +294,18 @@ private sealed class HistoryEntry {
     }
 
     data class Medication(val entry: MedicationEntry) : HistoryEntry() {
+        override val timestamp: Long = entry.timestamp
+    }
+
+    data class BloodPressure(val entry: BloodPressureEntry) : HistoryEntry() {
+        override val timestamp: Long = entry.timestamp
+    }
+
+    data class Cholesterol(val entry: CholesterolEntry) : HistoryEntry() {
+        override val timestamp: Long = entry.timestamp
+    }
+
+    data class Weight(val entry: WeightEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
     }
 }

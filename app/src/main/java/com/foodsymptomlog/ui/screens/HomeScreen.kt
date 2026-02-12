@@ -1,6 +1,7 @@
 package com.foodsymptomlog.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,40 +13,54 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.foodsymptomlog.data.entity.BloodPressureEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealWithDetails
 import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
+import com.foodsymptomlog.data.entity.WeightEntry
+import com.foodsymptomlog.ui.components.BloodPressureCard
+import com.foodsymptomlog.ui.components.CholesterolCard
 import com.foodsymptomlog.ui.components.MealEntryCard
 import com.foodsymptomlog.ui.components.MedicationCard
 import com.foodsymptomlog.ui.components.OtherEntryCard
 import com.foodsymptomlog.ui.components.SymptomEntryCard
+import com.foodsymptomlog.ui.components.WeightCard
 import com.foodsymptomlog.viewmodel.LogViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -57,21 +72,33 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     viewModel: LogViewModel,
     onAddMeal: () -> Unit,
-    onAddSymptom: () -> Unit,
-    onAddOther: () -> Unit,
-    onAddMedication: () -> Unit = {},
+    onAddSymptom: (String?) -> Unit,
+    onAddOther: (String) -> Unit,
+    onAddMedication: (String?) -> Unit,
+    onAddBloodPressure: () -> Unit,
+    onAddCholesterol: () -> Unit,
+    onAddWeight: () -> Unit,
     onViewHistory: () -> Unit,
     onViewCalendar: () -> Unit = {},
     onViewSettings: () -> Unit = {},
     onEditMeal: (Long) -> Unit = {},
     onEditSymptom: (Long) -> Unit = {},
     onEditOther: (Long) -> Unit = {},
-    onEditMedication: (Long) -> Unit = {}
+    onEditMedication: (Long) -> Unit = {},
+    onEditBloodPressure: (Long) -> Unit = {},
+    onEditCholesterol: (Long) -> Unit = {},
+    onEditWeight: (Long) -> Unit = {}
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
     val recentMedications by viewModel.recentMedications.collectAsState()
     val recentOtherEntries by viewModel.recentOtherEntries.collectAsState()
+    val recentBloodPressure by viewModel.recentBloodPressureEntries.collectAsState()
+    val recentCholesterol by viewModel.recentCholesterolEntries.collectAsState()
+    val recentWeight by viewModel.recentWeightEntries.collectAsState()
+
+    var biometricsMenuExpanded by remember { mutableStateOf(false) }
+    var otherMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -114,13 +141,14 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // First row: Meal and Symptom
+            // First row: Meal, Symptom, Medication
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Meal button
                 Button(
-                    onClick = onAddMeal,
+                    onClick = { onAddMeal() },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -135,8 +163,9 @@ fun HomeScreen(
                     Text("Meal")
                 }
 
+                // Symptom button
                 Button(
-                    onClick = onAddSymptom,
+                    onClick = { onAddSymptom(null) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -150,33 +179,10 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Symptom")
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Second row: Other and Medication
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+                // Medication button
                 Button(
-                    onClick = onAddOther,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Other")
-                }
-
-                Button(
-                    onClick = onAddMedication,
+                    onClick = { onAddMedication(null) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary
@@ -188,7 +194,136 @@ fun HomeScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Medication")
+                    Text("Meds")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Second row: Biometrics and Other
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Biometrics dropdown
+                Box(modifier = Modifier.weight(1f)) {
+                    Button(
+                        onClick = { biometricsMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MonitorHeart,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Biometrics")
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = biometricsMenuExpanded,
+                        onDismissRequest = { biometricsMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Blood Pressure") },
+                            onClick = {
+                                biometricsMenuExpanded = false
+                                onAddBloodPressure()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Cholesterol") },
+                            onClick = {
+                                biometricsMenuExpanded = false
+                                onAddCholesterol()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Weight") },
+                            onClick = {
+                                biometricsMenuExpanded = false
+                                onAddWeight()
+                            }
+                        )
+                    }
+                }
+
+                // Other dropdown
+                Box(modifier = Modifier.weight(1f)) {
+                    Button(
+                        onClick = { otherMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.outline
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreHoriz,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Other")
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = otherMenuExpanded,
+                        onDismissRequest = { otherMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Bowel Movement") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("BOWEL_MOVEMENT")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sleep") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("SLEEP")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Exercise") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("EXERCISE")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Stress") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("STRESS")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Water Intake") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("WATER_INTAKE")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Other") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("OTHER")
+                            }
+                        )
+                    }
                 }
             }
 
@@ -202,7 +337,12 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (recentMeals.isEmpty() && recentSymptoms.isEmpty() && recentMedications.isEmpty() && recentOtherEntries.isEmpty()) {
+            val allEmpty = recentMeals.isEmpty() && recentSymptoms.isEmpty() &&
+                recentMedications.isEmpty() && recentOtherEntries.isEmpty() &&
+                recentBloodPressure.isEmpty() && recentCholesterol.isEmpty() &&
+                recentWeight.isEmpty()
+
+            if (allEmpty) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -221,7 +361,7 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = "Start logging your meals, symptoms, and bowel movements!",
+                        text = "Start logging your meals, symptoms, and more!",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
@@ -231,27 +371,17 @@ fun HomeScreen(
                     recentMeals.map { EntryItem.Meal(it) } +
                     recentSymptoms.map { EntryItem.Symptom(it) } +
                     recentMedications.map { EntryItem.Medication(it) } +
-                    recentOtherEntries.map { EntryItem.Other(it) }
+                    recentOtherEntries.map { EntryItem.Other(it) } +
+                    recentBloodPressure.map { EntryItem.BloodPressure(it) } +
+                    recentCholesterol.map { EntryItem.Cholesterol(it) } +
+                    recentWeight.map { EntryItem.Weight(it) }
                 )
-                    .sortedByDescending {
-                        when (it) {
-                            is EntryItem.Meal -> it.entry.meal.timestamp
-                            is EntryItem.Symptom -> it.entry.timestamp
-                            is EntryItem.Medication -> it.entry.timestamp
-                            is EntryItem.Other -> it.entry.timestamp
-                        }
-                    }
+                    .sortedByDescending { it.timestamp }
                     .take(10)
 
                 // Group entries by day
                 val entriesByDay = combinedEntries.groupBy { item ->
-                    val timestamp = when (item) {
-                        is EntryItem.Meal -> item.entry.meal.timestamp
-                        is EntryItem.Symptom -> item.entry.timestamp
-                        is EntryItem.Medication -> item.entry.timestamp
-                        is EntryItem.Other -> item.entry.timestamp
-                    }
-                    Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+                    Instant.ofEpochMilli(item.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
                 }
 
                 val today = LocalDate.now()
@@ -316,6 +446,21 @@ fun HomeScreen(
                                     onDelete = { viewModel.deleteMedication(item.entry) },
                                     onEdit = { onEditMedication(item.entry.id) }
                                 )
+                                is EntryItem.BloodPressure -> BloodPressureCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteBloodPressure(item.entry) },
+                                    onEdit = { onEditBloodPressure(item.entry.id) }
+                                )
+                                is EntryItem.Cholesterol -> CholesterolCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteCholesterol(item.entry) },
+                                    onEdit = { onEditCholesterol(item.entry.id) }
+                                )
+                                is EntryItem.Weight -> WeightCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteWeight(item.entry) },
+                                    onEdit = { onEditWeight(item.entry.id) }
+                                )
                             }
                         }
                     }
@@ -326,8 +471,27 @@ fun HomeScreen(
 }
 
 private sealed class EntryItem {
-    data class Meal(val entry: MealWithDetails) : EntryItem()
-    data class Symptom(val entry: SymptomEntry) : EntryItem()
-    data class Medication(val entry: MedicationEntry) : EntryItem()
-    data class Other(val entry: OtherEntry) : EntryItem()
+    abstract val timestamp: Long
+
+    data class Meal(val entry: MealWithDetails) : EntryItem() {
+        override val timestamp: Long = entry.meal.timestamp
+    }
+    data class Symptom(val entry: SymptomEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class Medication(val entry: MedicationEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class Other(val entry: OtherEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class BloodPressure(val entry: BloodPressureEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class Cholesterol(val entry: CholesterolEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class Weight(val entry: WeightEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
 }

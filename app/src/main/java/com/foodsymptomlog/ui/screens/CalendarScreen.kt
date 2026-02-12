@@ -40,14 +40,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.foodsymptomlog.data.entity.BloodPressureEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealWithDetails
 import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
+import com.foodsymptomlog.data.entity.WeightEntry
+import com.foodsymptomlog.ui.components.BloodPressureCard
+import com.foodsymptomlog.ui.components.CholesterolCard
 import com.foodsymptomlog.ui.components.MealEntryCard
 import com.foodsymptomlog.ui.components.MedicationCard
 import com.foodsymptomlog.ui.components.OtherEntryCard
 import com.foodsymptomlog.ui.components.SymptomEntryCard
+import com.foodsymptomlog.ui.components.WeightCard
 import com.foodsymptomlog.viewmodel.LogViewModel
 import java.time.DayOfWeek
 import java.time.Instant
@@ -65,12 +71,18 @@ fun CalendarScreen(
     onEditMeal: (Long) -> Unit = {},
     onEditSymptom: (Long) -> Unit = {},
     onEditOther: (Long) -> Unit = {},
-    onEditMedication: (Long) -> Unit = {}
+    onEditMedication: (Long) -> Unit = {},
+    onEditBloodPressure: (Long) -> Unit = {},
+    onEditCholesterol: (Long) -> Unit = {},
+    onEditWeight: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
     val allMedications by viewModel.allMedications.collectAsState()
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
+    val allBloodPressure by viewModel.allBloodPressureEntries.collectAsState()
+    val allCholesterol by viewModel.allCholesterolEntries.collectAsState()
+    val allWeight by viewModel.allWeightEntries.collectAsState()
 
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -78,7 +90,7 @@ fun CalendarScreen(
     val zone = ZoneId.systemDefault()
 
     // Group entries by date
-    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries) {
+    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight) {
         val map = mutableMapOf<LocalDate, MutableList<CalendarEntry>>()
 
         allMeals.forEach { meal ->
@@ -97,6 +109,18 @@ fun CalendarScreen(
             val date = Instant.ofEpochMilli(other.timestamp).atZone(zone).toLocalDate()
             map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Other(other))
         }
+        allBloodPressure.forEach { bp ->
+            val date = Instant.ofEpochMilli(bp.timestamp).atZone(zone).toLocalDate()
+            map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.BloodPressure(bp))
+        }
+        allCholesterol.forEach { chol ->
+            val date = Instant.ofEpochMilli(chol.timestamp).atZone(zone).toLocalDate()
+            map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Cholesterol(chol))
+        }
+        allWeight.forEach { weight ->
+            val date = Instant.ofEpochMilli(weight.timestamp).atZone(zone).toLocalDate()
+            map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Weight(weight))
+        }
 
         map
     }
@@ -108,6 +132,9 @@ fun CalendarScreen(
                 is CalendarEntry.Symptom -> it.entry.timestamp
                 is CalendarEntry.Medication -> it.entry.timestamp
                 is CalendarEntry.Other -> it.entry.timestamp
+                is CalendarEntry.BloodPressure -> it.entry.timestamp
+                is CalendarEntry.Cholesterol -> it.entry.timestamp
+                is CalendarEntry.Weight -> it.entry.timestamp
             }
         }
         ?: emptyList()
@@ -210,6 +237,21 @@ fun CalendarScreen(
                                 entry = entry.entry,
                                 onDelete = { viewModel.deleteOtherEntry(entry.entry) },
                                 onEdit = { onEditOther(entry.entry.id) }
+                            )
+                            is CalendarEntry.BloodPressure -> BloodPressureCard(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteBloodPressure(entry.entry) },
+                                onEdit = { onEditBloodPressure(entry.entry.id) }
+                            )
+                            is CalendarEntry.Cholesterol -> CholesterolCard(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteCholesterol(entry.entry) },
+                                onEdit = { onEditCholesterol(entry.entry.id) }
+                            )
+                            is CalendarEntry.Weight -> WeightCard(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteWeight(entry.entry) },
+                                onEdit = { onEditWeight(entry.entry.id) }
                             )
                         }
                     }
@@ -369,4 +411,7 @@ private sealed class CalendarEntry {
     data class Symptom(val entry: SymptomEntry) : CalendarEntry()
     data class Medication(val entry: MedicationEntry) : CalendarEntry()
     data class Other(val entry: OtherEntry) : CalendarEntry()
+    data class BloodPressure(val entry: BloodPressureEntry) : CalendarEntry()
+    data class Cholesterol(val entry: CholesterolEntry) : CalendarEntry()
+    data class Weight(val entry: WeightEntry) : CalendarEntry()
 }

@@ -50,12 +50,13 @@ import kotlin.math.roundToInt
 fun AddSymptomScreen(
     viewModel: LogViewModel,
     onNavigateBack: () -> Unit,
-    editId: Long? = null
+    editId: Long? = null,
+    prefillName: String? = null
 ) {
     val editingSymptom by viewModel.editingSymptom.collectAsState()
     val isEditMode = editId != null
 
-    var symptomName by remember { mutableStateOf("") }
+    var symptomName by remember { mutableStateOf(prefillName ?: "") }
     var severity by remember { mutableFloatStateOf(3f) }
     var notes by remember { mutableStateOf("") }
     var existingId by remember { mutableStateOf<Long?>(null) }

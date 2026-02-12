@@ -1,9 +1,12 @@
 package com.foodsymptomlog.data.export
 
+import com.foodsymptomlog.data.entity.BloodPressureEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealWithDetails
 import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
+import com.foodsymptomlog.data.entity.WeightEntry
 import com.google.gson.GsonBuilder
 
 object DataExporter {
@@ -14,7 +17,10 @@ object DataExporter {
         meals: List<MealWithDetails>,
         symptoms: List<SymptomEntry>,
         medications: List<MedicationEntry>,
-        otherEntries: List<OtherEntry>
+        otherEntries: List<OtherEntry>,
+        bloodPressureEntries: List<BloodPressureEntry> = emptyList(),
+        cholesterolEntries: List<CholesterolEntry> = emptyList(),
+        weightEntries: List<WeightEntry> = emptyList()
     ): String {
         val exportData = ExportData(
             meals = meals.map { meal ->
@@ -50,6 +56,33 @@ object DataExporter {
                     value = other.value,
                     notes = other.notes,
                     timestamp = other.timestamp
+                )
+            },
+            bloodPressureEntries = bloodPressureEntries.map { bp ->
+                ExportedBloodPressure(
+                    systolic = bp.systolic,
+                    diastolic = bp.diastolic,
+                    pulse = bp.pulse,
+                    notes = bp.notes,
+                    timestamp = bp.timestamp
+                )
+            },
+            cholesterolEntries = cholesterolEntries.map { chol ->
+                ExportedCholesterol(
+                    total = chol.total,
+                    ldl = chol.ldl,
+                    hdl = chol.hdl,
+                    triglycerides = chol.triglycerides,
+                    notes = chol.notes,
+                    timestamp = chol.timestamp
+                )
+            },
+            weightEntries = weightEntries.map { weight ->
+                ExportedWeight(
+                    weight = weight.weight,
+                    unit = weight.unit.name,
+                    notes = weight.notes,
+                    timestamp = weight.timestamp
                 )
             }
         )

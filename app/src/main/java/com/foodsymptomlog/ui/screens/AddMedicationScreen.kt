@@ -47,13 +47,14 @@ import com.foodsymptomlog.viewmodel.LogViewModel
 fun AddMedicationScreen(
     viewModel: LogViewModel,
     onNavigateBack: () -> Unit,
-    editId: Long? = null
+    editId: Long? = null,
+    prefillName: String? = null
 ) {
     val editingMedication by viewModel.editingMedication.collectAsState()
     val medicationNames by viewModel.allMedicationNames.collectAsState()
     val isEditMode = editId != null
 
-    var name by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(prefillName ?: "") }
     var dosage by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }

@@ -60,12 +60,17 @@ import com.foodsymptomlog.viewmodel.LogViewModel
 fun AddMealScreen(
     viewModel: LogViewModel,
     onNavigateBack: () -> Unit,
-    editId: Long? = null
+    editId: Long? = null,
+    preselectedMealType: String? = null
 ) {
     val editingMeal by viewModel.editingMeal.collectAsState()
     val isEditMode = editId != null
 
-    var selectedMealType by remember { mutableStateOf(MealType.BREAKFAST) }
+    val initialMealType = preselectedMealType?.let {
+        try { MealType.valueOf(it) } catch (e: IllegalArgumentException) { MealType.BREAKFAST }
+    } ?: MealType.BREAKFAST
+
+    var selectedMealType by remember { mutableStateOf(initialMealType) }
     val foods = remember { mutableStateListOf<String>() }
     var currentFood by remember { mutableStateOf("") }
     val tags = remember { mutableStateListOf<String>() }

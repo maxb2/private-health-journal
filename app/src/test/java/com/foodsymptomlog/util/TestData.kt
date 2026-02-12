@@ -1,6 +1,8 @@
 package com.foodsymptomlog.util
 
+import com.foodsymptomlog.data.entity.BloodPressureEntry
 import com.foodsymptomlog.data.entity.BowelMovementEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.FoodItem
 import com.foodsymptomlog.data.entity.MealEntry
 import com.foodsymptomlog.data.entity.MealType
@@ -10,6 +12,8 @@ import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.OtherEntryType
 import com.foodsymptomlog.data.entity.SymptomEntry
 import com.foodsymptomlog.data.entity.Tag
+import com.foodsymptomlog.data.entity.WeightEntry
+import com.foodsymptomlog.data.entity.WeightUnit
 
 object TestData {
 
@@ -107,6 +111,54 @@ object TestData {
         entryType = entryType,
         subType = subType,
         value = value,
+        notes = notes,
+        timestamp = timestamp
+    )
+
+    fun createBloodPressureEntry(
+        id: Long = 1L,
+        systolic: Int = 120,
+        diastolic: Int = 80,
+        pulse: Int? = 72,
+        notes: String = "Test notes",
+        timestamp: Long = 1000L
+    ) = BloodPressureEntry(
+        id = id,
+        systolic = systolic,
+        diastolic = diastolic,
+        pulse = pulse,
+        notes = notes,
+        timestamp = timestamp
+    )
+
+    fun createCholesterolEntry(
+        id: Long = 1L,
+        total: Int? = 200,
+        ldl: Int? = 100,
+        hdl: Int? = 60,
+        triglycerides: Int? = 150,
+        notes: String = "Test notes",
+        timestamp: Long = 1000L
+    ) = CholesterolEntry(
+        id = id,
+        total = total,
+        ldl = ldl,
+        hdl = hdl,
+        triglycerides = triglycerides,
+        notes = notes,
+        timestamp = timestamp
+    )
+
+    fun createWeightEntry(
+        id: Long = 1L,
+        weight: Double = 150.0,
+        unit: WeightUnit = WeightUnit.LB,
+        notes: String = "Test notes",
+        timestamp: Long = 1000L
+    ) = WeightEntry(
+        id = id,
+        weight = weight,
+        unit = unit,
         notes = notes,
         timestamp = timestamp
     )

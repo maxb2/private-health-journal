@@ -1,10 +1,13 @@
 package com.foodsymptomlog.repository
 
+import com.foodsymptomlog.data.dao.BloodPressureDao
 import com.foodsymptomlog.data.dao.BowelMovementDao
+import com.foodsymptomlog.data.dao.CholesterolDao
 import com.foodsymptomlog.data.dao.MealDao
 import com.foodsymptomlog.data.dao.MedicationDao
 import com.foodsymptomlog.data.dao.OtherEntryDao
 import com.foodsymptomlog.data.dao.SymptomEntryDao
+import com.foodsymptomlog.data.dao.WeightDao
 import com.foodsymptomlog.data.entity.MealType
 import com.foodsymptomlog.data.repository.LogRepository
 import com.foodsymptomlog.util.TestData
@@ -25,6 +28,9 @@ class LogRepositoryTest {
     private lateinit var bowelMovementDao: BowelMovementDao
     private lateinit var medicationDao: MedicationDao
     private lateinit var otherEntryDao: OtherEntryDao
+    private lateinit var bloodPressureDao: BloodPressureDao
+    private lateinit var cholesterolDao: CholesterolDao
+    private lateinit var weightDao: WeightDao
     private lateinit var repository: LogRepository
 
     @Before
@@ -34,6 +40,9 @@ class LogRepositoryTest {
         bowelMovementDao = mockk(relaxed = true)
         medicationDao = mockk(relaxed = true)
         otherEntryDao = mockk(relaxed = true)
+        bloodPressureDao = mockk(relaxed = true)
+        cholesterolDao = mockk(relaxed = true)
+        weightDao = mockk(relaxed = true)
 
         every { mealDao.getAllMealsWithDetails() } returns flowOf(emptyList())
         every { mealDao.getAllTags() } returns flowOf(emptyList())
@@ -43,13 +52,19 @@ class LogRepositoryTest {
         every { medicationDao.getAllMedications() } returns flowOf(emptyList())
         every { medicationDao.getAllMedicationNames() } returns flowOf(emptyList())
         every { otherEntryDao.getAllOtherEntries() } returns flowOf(emptyList())
+        every { bloodPressureDao.getAllBloodPressureEntries() } returns flowOf(emptyList())
+        every { cholesterolDao.getAllCholesterolEntries() } returns flowOf(emptyList())
+        every { weightDao.getAllWeightEntries() } returns flowOf(emptyList())
 
         repository = LogRepository(
             mealDao,
             symptomEntryDao,
             bowelMovementDao,
             medicationDao,
-            otherEntryDao
+            otherEntryDao,
+            bloodPressureDao,
+            cholesterolDao,
+            weightDao
         )
     }
 

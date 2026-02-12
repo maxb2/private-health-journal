@@ -13,10 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.foodsymptomlog.ui.screens.AddBloodPressureScreen
+import com.foodsymptomlog.ui.screens.AddCholesterolScreen
 import com.foodsymptomlog.ui.screens.AddMealScreen
 import com.foodsymptomlog.ui.screens.AddMedicationScreen
 import com.foodsymptomlog.ui.screens.AddOtherEntryScreen
 import com.foodsymptomlog.ui.screens.AddSymptomScreen
+import com.foodsymptomlog.ui.screens.AddWeightScreen
 import com.foodsymptomlog.ui.screens.CalendarScreen
 import com.foodsymptomlog.ui.screens.HistoryScreen
 import com.foodsymptomlog.ui.screens.HomeScreen
@@ -44,38 +47,104 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 viewModel = viewModel,
                                 onAddMeal = { navController.navigate("add_meal") },
-                                onAddSymptom = { navController.navigate("add_symptom") },
-                                onAddOther = { navController.navigate("add_other") },
-                                onAddMedication = { navController.navigate("add_medication") },
+                                onAddSymptom = { name ->
+                                    if (name != null) navController.navigate("add_symptom?name=$name")
+                                    else navController.navigate("add_symptom")
+                                },
+                                onAddOther = { otherType -> navController.navigate("add_other?type=$otherType") },
+                                onAddMedication = { name ->
+                                    if (name != null) navController.navigate("add_medication?name=$name")
+                                    else navController.navigate("add_medication")
+                                },
+                                onAddBloodPressure = { navController.navigate("add_blood_pressure") },
+                                onAddCholesterol = { navController.navigate("add_cholesterol") },
+                                onAddWeight = { navController.navigate("add_weight") },
                                 onViewHistory = { navController.navigate("history") },
                                 onViewCalendar = { navController.navigate("calendar") },
                                 onViewSettings = { navController.navigate("settings") },
                                 onEditMeal = { id -> navController.navigate("edit_meal/$id") },
                                 onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
                                 onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") }
+                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
+                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
+                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
+                                onEditWeight = { id -> navController.navigate("edit_weight/$id") }
                             )
                         }
-                        composable("add_meal") {
+                        composable(
+                            route = "add_meal?mealType={mealType}",
+                            arguments = listOf(navArgument("mealType") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            })
+                        ) { backStackEntry ->
+                            val mealType = backStackEntry.arguments?.getString("mealType")
                             AddMealScreen(
                                 viewModel = viewModel,
-                                onNavigateBack = { navController.popBackStack() }
+                                onNavigateBack = { navController.popBackStack() },
+                                preselectedMealType = mealType
                             )
                         }
-                        composable("add_symptom") {
+                        composable(
+                            route = "add_symptom?name={name}",
+                            arguments = listOf(navArgument("name") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            })
+                        ) { backStackEntry ->
+                            val prefillName = backStackEntry.arguments?.getString("name")
                             AddSymptomScreen(
                                 viewModel = viewModel,
-                                onNavigateBack = { navController.popBackStack() }
+                                onNavigateBack = { navController.popBackStack() },
+                                prefillName = prefillName
                             )
                         }
-                        composable("add_other") {
+                        composable(
+                            route = "add_other?type={type}",
+                            arguments = listOf(navArgument("type") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            })
+                        ) { backStackEntry ->
+                            val otherType = backStackEntry.arguments?.getString("type")
                             AddOtherEntryScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                preselectedType = otherType
+                            )
+                        }
+                        composable(
+                            route = "add_medication?name={name}",
+                            arguments = listOf(navArgument("name") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            })
+                        ) { backStackEntry ->
+                            val prefillName = backStackEntry.arguments?.getString("name")
+                            AddMedicationScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                prefillName = prefillName
+                            )
+                        }
+                        composable("add_blood_pressure") {
+                            AddBloodPressureScreen(
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        composable("add_medication") {
-                            AddMedicationScreen(
+                        composable("add_cholesterol") {
+                            AddCholesterolScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("add_weight") {
+                            AddWeightScreen(
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -93,7 +162,10 @@ class MainActivity : ComponentActivity() {
                                 onEditMeal = { id -> navController.navigate("edit_meal/$id") },
                                 onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
                                 onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") }
+                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
+                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
+                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
+                                onEditWeight = { id -> navController.navigate("edit_weight/$id") }
                             )
                         }
                         composable("history") {
@@ -103,7 +175,10 @@ class MainActivity : ComponentActivity() {
                                 onEditMeal = { id -> navController.navigate("edit_meal/$id") },
                                 onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
                                 onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") }
+                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
+                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
+                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
+                                onEditWeight = { id -> navController.navigate("edit_weight/$id") }
                             )
                         }
                         // Edit routes
@@ -149,6 +224,39 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = medicationId
+                            )
+                        }
+                        composable(
+                            route = "edit_blood_pressure/{bloodPressureId}",
+                            arguments = listOf(navArgument("bloodPressureId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val bloodPressureId = backStackEntry.arguments?.getLong("bloodPressureId")
+                            AddBloodPressureScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                editId = bloodPressureId
+                            )
+                        }
+                        composable(
+                            route = "edit_cholesterol/{cholesterolId}",
+                            arguments = listOf(navArgument("cholesterolId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val cholesterolId = backStackEntry.arguments?.getLong("cholesterolId")
+                            AddCholesterolScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                editId = cholesterolId
+                            )
+                        }
+                        composable(
+                            route = "edit_weight/{weightId}",
+                            arguments = listOf(navArgument("weightId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val weightId = backStackEntry.arguments?.getLong("weightId")
+                            AddWeightScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                editId = weightId
                             )
                         }
                     }

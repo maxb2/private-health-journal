@@ -8,7 +8,9 @@ import com.foodsymptomlog.data.AppDatabase
 import com.foodsymptomlog.data.export.DataExporter
 import com.foodsymptomlog.data.export.DataImporter
 import com.foodsymptomlog.data.export.ImportResult
+import com.foodsymptomlog.data.entity.BloodPressureEntry
 import com.foodsymptomlog.data.entity.BowelMovementEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealEntry
 import com.foodsymptomlog.data.entity.MealType
 import com.foodsymptomlog.data.entity.MealWithDetails
@@ -16,6 +18,8 @@ import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
 import com.foodsymptomlog.data.entity.Tag
+import com.foodsymptomlog.data.entity.WeightEntry
+import com.foodsymptomlog.data.entity.WeightUnit
 import com.foodsymptomlog.data.repository.LogRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,12 +36,18 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val allBowelMovements: StateFlow<List<BowelMovementEntry>>
     val allMedications: StateFlow<List<MedicationEntry>>
     val allOtherEntries: StateFlow<List<OtherEntry>>
+    val allBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
+    val allCholesterolEntries: StateFlow<List<CholesterolEntry>>
+    val allWeightEntries: StateFlow<List<WeightEntry>>
     val ongoingSymptoms: StateFlow<List<SymptomEntry>>
     val recentMeals: StateFlow<List<MealWithDetails>>
     val recentSymptomEntries: StateFlow<List<SymptomEntry>>
     val recentBowelMovements: StateFlow<List<BowelMovementEntry>>
     val recentMedications: StateFlow<List<MedicationEntry>>
     val recentOtherEntries: StateFlow<List<OtherEntry>>
+    val recentBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
+    val recentCholesterolEntries: StateFlow<List<CholesterolEntry>>
+    val recentWeightEntries: StateFlow<List<WeightEntry>>
     val allTags: StateFlow<List<Tag>>
     val allMedicationNames: StateFlow<List<String>>
 
@@ -48,7 +58,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.symptomEntryDao(),
             database.bowelMovementDao(),
             database.medicationDao(),
-            database.otherEntryDao()
+            database.otherEntryDao(),
+            database.bloodPressureDao(),
+            database.cholesterolDao(),
+            database.weightDao()
         )
 
         allMeals = repository.allMeals
@@ -64,6 +77,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allOtherEntries = repository.allOtherEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allBloodPressureEntries = repository.allBloodPressureEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allCholesterolEntries = repository.allCholesterolEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allWeightEntries = repository.allWeightEntries
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         ongoingSymptoms = repository.ongoingSymptoms
@@ -82,6 +104,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         recentOtherEntries = repository.getRecentOtherEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentBloodPressureEntries = repository.getRecentBloodPressureEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentCholesterolEntries = repository.getRecentCholesterolEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentWeightEntries = repository.getRecentWeightEntries(5)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allTags = repository.allTags
@@ -204,6 +235,105 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Blood Pressure methods
+    fun addBloodPressure(
+        systolic: Int,
+        diastolic: Int,
+        pulse: Int? = null,
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        viewModelScope.launch {
+            repository.insertBloodPressure(
+                BloodPressureEntry(
+                    systolic = systolic,
+                    diastolic = diastolic,
+                    pulse = pulse,
+                    notes = notes,
+                    timestamp = timestamp
+                )
+            )
+        }
+    }
+
+    fun updateBloodPressure(entry: BloodPressureEntry) {
+        viewModelScope.launch {
+            repository.updateBloodPressure(entry)
+        }
+    }
+
+    fun deleteBloodPressure(entry: BloodPressureEntry) {
+        viewModelScope.launch {
+            repository.deleteBloodPressure(entry)
+        }
+    }
+
+    // Cholesterol methods
+    fun addCholesterol(
+        total: Int? = null,
+        ldl: Int? = null,
+        hdl: Int? = null,
+        triglycerides: Int? = null,
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        viewModelScope.launch {
+            repository.insertCholesterol(
+                CholesterolEntry(
+                    total = total,
+                    ldl = ldl,
+                    hdl = hdl,
+                    triglycerides = triglycerides,
+                    notes = notes,
+                    timestamp = timestamp
+                )
+            )
+        }
+    }
+
+    fun updateCholesterol(entry: CholesterolEntry) {
+        viewModelScope.launch {
+            repository.updateCholesterol(entry)
+        }
+    }
+
+    fun deleteCholesterol(entry: CholesterolEntry) {
+        viewModelScope.launch {
+            repository.deleteCholesterol(entry)
+        }
+    }
+
+    // Weight methods
+    fun addWeight(
+        weight: Double,
+        unit: WeightUnit = WeightUnit.LB,
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        viewModelScope.launch {
+            repository.insertWeight(
+                WeightEntry(
+                    weight = weight,
+                    unit = unit,
+                    notes = notes,
+                    timestamp = timestamp
+                )
+            )
+        }
+    }
+
+    fun updateWeight(entry: WeightEntry) {
+        viewModelScope.launch {
+            repository.updateWeight(entry)
+        }
+    }
+
+    fun deleteWeight(entry: WeightEntry) {
+        viewModelScope.launch {
+            repository.deleteWeight(entry)
+        }
+    }
+
     // Update methods
     fun updateSymptom(symptomEntry: SymptomEntry) {
         viewModelScope.launch {
@@ -243,6 +373,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _editingOtherEntry = MutableStateFlow<OtherEntry?>(null)
     val editingOtherEntry: StateFlow<OtherEntry?> = _editingOtherEntry.asStateFlow()
 
+    private val _editingBloodPressure = MutableStateFlow<BloodPressureEntry?>(null)
+    val editingBloodPressure: StateFlow<BloodPressureEntry?> = _editingBloodPressure.asStateFlow()
+
+    private val _editingCholesterol = MutableStateFlow<CholesterolEntry?>(null)
+    val editingCholesterol: StateFlow<CholesterolEntry?> = _editingCholesterol.asStateFlow()
+
+    private val _editingWeight = MutableStateFlow<WeightEntry?>(null)
+    val editingWeight: StateFlow<WeightEntry?> = _editingWeight.asStateFlow()
+
     fun loadSymptomForEditing(id: Long) {
         viewModelScope.launch {
             _editingSymptom.value = repository.getSymptomById(id)
@@ -273,12 +412,33 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadBloodPressureForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingBloodPressure.value = repository.getBloodPressureById(id)
+        }
+    }
+
+    fun loadCholesterolForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingCholesterol.value = repository.getCholesterolById(id)
+        }
+    }
+
+    fun loadWeightForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingWeight.value = repository.getWeightById(id)
+        }
+    }
+
     fun clearEditingState() {
         _editingSymptom.value = null
         _editingBowelMovement.value = null
         _editingMeal.value = null
         _editingMedication.value = null
         _editingOtherEntry.value = null
+        _editingBloodPressure.value = null
+        _editingCholesterol.value = null
+        _editingWeight.value = null
     }
 
     // Export/Import
@@ -289,13 +449,18 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     meals = allMeals.value,
                     symptoms = allSymptomEntries.value,
                     medications = allMedications.value,
-                    otherEntries = allOtherEntries.value
+                    otherEntries = allOtherEntries.value,
+                    bloodPressureEntries = allBloodPressureEntries.value,
+                    cholesterolEntries = allCholesterolEntries.value,
+                    weightEntries = allWeightEntries.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
                 }
                 val total = allMeals.value.size + allSymptomEntries.value.size +
-                    allMedications.value.size + allOtherEntries.value.size
+                    allMedications.value.size + allOtherEntries.value.size +
+                    allBloodPressureEntries.value.size + allCholesterolEntries.value.size +
+                    allWeightEntries.value.size
                 onResult(true, "Exported $total entries successfully")
             } catch (e: Exception) {
                 onResult(false, "Export failed: ${e.message}")

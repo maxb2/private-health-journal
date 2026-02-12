@@ -1,11 +1,16 @@
 package com.foodsymptomlog.data.repository
 
+import com.foodsymptomlog.data.dao.BloodPressureDao
 import com.foodsymptomlog.data.dao.BowelMovementDao
+import com.foodsymptomlog.data.dao.CholesterolDao
 import com.foodsymptomlog.data.dao.MealDao
 import com.foodsymptomlog.data.dao.MedicationDao
 import com.foodsymptomlog.data.dao.OtherEntryDao
 import com.foodsymptomlog.data.dao.SymptomEntryDao
+import com.foodsymptomlog.data.dao.WeightDao
+import com.foodsymptomlog.data.entity.BloodPressureEntry
 import com.foodsymptomlog.data.entity.BowelMovementEntry
+import com.foodsymptomlog.data.entity.CholesterolEntry
 import com.foodsymptomlog.data.entity.MealEntry
 import com.foodsymptomlog.data.entity.MealType
 import com.foodsymptomlog.data.entity.MealWithDetails
@@ -13,6 +18,7 @@ import com.foodsymptomlog.data.entity.MedicationEntry
 import com.foodsymptomlog.data.entity.OtherEntry
 import com.foodsymptomlog.data.entity.SymptomEntry
 import com.foodsymptomlog.data.entity.Tag
+import com.foodsymptomlog.data.entity.WeightEntry
 import kotlinx.coroutines.flow.Flow
 
 class LogRepository(
@@ -20,7 +26,10 @@ class LogRepository(
     private val symptomEntryDao: SymptomEntryDao,
     private val bowelMovementDao: BowelMovementDao,
     private val medicationDao: MedicationDao,
-    private val otherEntryDao: OtherEntryDao
+    private val otherEntryDao: OtherEntryDao,
+    private val bloodPressureDao: BloodPressureDao,
+    private val cholesterolDao: CholesterolDao,
+    private val weightDao: WeightDao
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -30,6 +39,9 @@ class LogRepository(
     val allMedications: Flow<List<MedicationEntry>> = medicationDao.getAllMedications()
     val allMedicationNames: Flow<List<String>> = medicationDao.getAllMedicationNames()
     val allOtherEntries: Flow<List<OtherEntry>> = otherEntryDao.getAllOtherEntries()
+    val allBloodPressureEntries: Flow<List<BloodPressureEntry>> = bloodPressureDao.getAllBloodPressureEntries()
+    val allCholesterolEntries: Flow<List<CholesterolEntry>> = cholesterolDao.getAllCholesterolEntries()
+    val allWeightEntries: Flow<List<WeightEntry>> = weightDao.getAllWeightEntries()
 
     fun getRecentMeals(limit: Int = 5): Flow<List<MealWithDetails>> {
         return mealDao.getRecentMealsWithDetails(limit)
@@ -49,6 +61,18 @@ class LogRepository(
 
     fun getRecentOtherEntries(limit: Int = 5): Flow<List<OtherEntry>> {
         return otherEntryDao.getRecentOtherEntries(limit)
+    }
+
+    fun getRecentBloodPressureEntries(limit: Int = 5): Flow<List<BloodPressureEntry>> {
+        return bloodPressureDao.getRecentBloodPressureEntries(limit)
+    }
+
+    fun getRecentCholesterolEntries(limit: Int = 5): Flow<List<CholesterolEntry>> {
+        return cholesterolDao.getRecentCholesterolEntries(limit)
+    }
+
+    fun getRecentWeightEntries(limit: Int = 5): Flow<List<WeightEntry>> {
+        return weightDao.getRecentWeightEntries(limit)
     }
 
     suspend fun insertMeal(
@@ -160,5 +184,56 @@ class LogRepository(
 
     suspend fun getOtherEntryById(id: Long): OtherEntry? {
         return otherEntryDao.getById(id)
+    }
+
+    // Blood Pressure methods
+    suspend fun insertBloodPressure(entry: BloodPressureEntry): Long {
+        return bloodPressureDao.insert(entry)
+    }
+
+    suspend fun updateBloodPressure(entry: BloodPressureEntry) {
+        bloodPressureDao.update(entry)
+    }
+
+    suspend fun deleteBloodPressure(entry: BloodPressureEntry) {
+        bloodPressureDao.delete(entry)
+    }
+
+    suspend fun getBloodPressureById(id: Long): BloodPressureEntry? {
+        return bloodPressureDao.getById(id)
+    }
+
+    // Cholesterol methods
+    suspend fun insertCholesterol(entry: CholesterolEntry): Long {
+        return cholesterolDao.insert(entry)
+    }
+
+    suspend fun updateCholesterol(entry: CholesterolEntry) {
+        cholesterolDao.update(entry)
+    }
+
+    suspend fun deleteCholesterol(entry: CholesterolEntry) {
+        cholesterolDao.delete(entry)
+    }
+
+    suspend fun getCholesterolById(id: Long): CholesterolEntry? {
+        return cholesterolDao.getById(id)
+    }
+
+    // Weight methods
+    suspend fun insertWeight(entry: WeightEntry): Long {
+        return weightDao.insert(entry)
+    }
+
+    suspend fun updateWeight(entry: WeightEntry) {
+        weightDao.update(entry)
+    }
+
+    suspend fun deleteWeight(entry: WeightEntry) {
+        weightDao.delete(entry)
+    }
+
+    suspend fun getWeightById(id: Long): WeightEntry? {
+        return weightDao.getById(id)
     }
 }

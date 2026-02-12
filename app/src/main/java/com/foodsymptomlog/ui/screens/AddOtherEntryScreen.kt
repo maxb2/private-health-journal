@@ -22,8 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,10 +55,14 @@ fun AddOtherEntryScreen(
     viewModel: LogViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null,
-    initialType: OtherEntryType = OtherEntryType.BOWEL_MOVEMENT
+    preselectedType: String? = null
 ) {
     val editingOtherEntry by viewModel.editingOtherEntry.collectAsState()
     val isEditMode = editId != null
+
+    val initialType = preselectedType?.let {
+        try { OtherEntryType.valueOf(it) } catch (e: IllegalArgumentException) { OtherEntryType.BOWEL_MOVEMENT }
+    } ?: OtherEntryType.BOWEL_MOVEMENT
 
     var selectedType by remember { mutableStateOf(initialType) }
     var subType by remember { mutableStateOf("") }
@@ -94,12 +96,18 @@ fun AddOtherEntryScreen(
         }
     }
 
+    val screenTitle = if (isEditMode) {
+        "Edit ${getTypeTitle(selectedType)}"
+    } else {
+        "Log ${getTypeTitle(selectedType)}"
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        if (isEditMode) "Edit Entry" else "Log Other",
+                        screenTitle,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -127,51 +135,6 @@ fun AddOtherEntryScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Type selection
-            Text(
-                text = "Entry Type",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OtherEntryType.entries.take(3).forEach { type ->
-                    FilterChip(
-                        selected = selectedType == type,
-                        onClick = { selectedType = type },
-                        label = { Text(getTypeDisplayName(type)) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onTertiary
-                        )
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OtherEntryType.entries.drop(3).forEach { type ->
-                    FilterChip(
-                        selected = selectedType == type,
-                        onClick = { selectedType = type },
-                        label = { Text(getTypeDisplayName(type)) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onTertiary
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Type-specific fields
             when (selectedType) {
                 OtherEntryType.BOWEL_MOVEMENT -> {
@@ -475,13 +438,14 @@ private fun getBristolVisualSize(type: Int) = when (type) {
     1 -> 8.dp; 2 -> 10.dp; 7 -> 6.dp; else -> 8.dp
 }
 
-private fun getTypeDisplayName(type: OtherEntryType): String {
+private fun getTypeTitle(type: OtherEntryType): String {
     return when (type) {
-        OtherEntryType.BOWEL_MOVEMENT -> "BM"
+        OtherEntryType.BOWEL_MOVEMENT -> "Bowel Movement"
         OtherEntryType.SLEEP -> "Sleep"
         OtherEntryType.EXERCISE -> "Exercise"
         OtherEntryType.STRESS -> "Stress"
-        OtherEntryType.WATER_INTAKE -> "Water"
+        OtherEntryType.WATER_INTAKE -> "Water Intake"
         OtherEntryType.OTHER -> "Other"
     }
 }
+
