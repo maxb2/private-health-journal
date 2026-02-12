@@ -3,4 +3,4 @@
 # proguardFiles setting in build.gradle.kts.
 
 # Keep Room entities
--keep class com.foodsymptomlog.data.entity.** { *; }
+-keep class com.privatehealthjournal.data.entity.** { *; }

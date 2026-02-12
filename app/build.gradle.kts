@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.foodsymptomlog"
+    namespace = "com.privatehealthjournal"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.foodsymptomlog"
+        applicationId = "com.privatehealthjournal"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

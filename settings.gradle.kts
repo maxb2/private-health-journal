@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FoodSymptomLog"
+rootProject.name = "PrivateHealthJournal"
 include(":app")
