@@ -45,6 +45,7 @@ import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodPressureCard
@@ -52,6 +53,7 @@ import com.privatehealthjournal.ui.components.CholesterolCard
 import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
+import com.privatehealthjournal.ui.components.SpO2Card
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -74,7 +76,8 @@ fun CalendarScreen(
     onEditMedication: (Long) -> Unit = {},
     onEditBloodPressure: (Long) -> Unit = {},
     onEditCholesterol: (Long) -> Unit = {},
-    onEditWeight: (Long) -> Unit = {}
+    onEditWeight: (Long) -> Unit = {},
+    onEditSpO2: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -83,6 +86,7 @@ fun CalendarScreen(
     val allBloodPressure by viewModel.allBloodPressureEntries.collectAsState()
     val allCholesterol by viewModel.allCholesterolEntries.collectAsState()
     val allWeight by viewModel.allWeightEntries.collectAsState()
+    val allSpO2 by viewModel.allSpO2Entries.collectAsState()
 
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -90,7 +94,7 @@ fun CalendarScreen(
     val zone = ZoneId.systemDefault()
 
     // Group entries by date
-    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight) {
+    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight, allSpO2) {
         val map = mutableMapOf<LocalDate, MutableList<CalendarEntry>>()
 
         allMeals.forEach { meal ->
@@ -121,6 +125,10 @@ fun CalendarScreen(
             val date = Instant.ofEpochMilli(weight.timestamp).atZone(zone).toLocalDate()
             map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Weight(weight))
         }
+        allSpO2.forEach { spo2 ->
+            val date = Instant.ofEpochMilli(spo2.timestamp).atZone(zone).toLocalDate()
+            map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.SpO2(spo2))
+        }
 
         map
     }
@@ -135,6 +143,7 @@ fun CalendarScreen(
                 is CalendarEntry.BloodPressure -> it.entry.timestamp
                 is CalendarEntry.Cholesterol -> it.entry.timestamp
                 is CalendarEntry.Weight -> it.entry.timestamp
+                is CalendarEntry.SpO2 -> it.entry.timestamp
             }
         }
         ?: emptyList()
@@ -252,6 +261,11 @@ fun CalendarScreen(
                                 entry = entry.entry,
                                 onDelete = { viewModel.deleteWeight(entry.entry) },
                                 onEdit = { onEditWeight(entry.entry.id) }
+                            )
+                            is CalendarEntry.SpO2 -> SpO2Card(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteSpO2(entry.entry) },
+                                onEdit = { onEditSpO2(entry.entry.id) }
                             )
                         }
                     }
@@ -414,4 +428,5 @@ private sealed class CalendarEntry {
     data class BloodPressure(val entry: BloodPressureEntry) : CalendarEntry()
     data class Cholesterol(val entry: CholesterolEntry) : CalendarEntry()
     data class Weight(val entry: WeightEntry) : CalendarEntry()
+    data class SpO2(val entry: SpO2Entry) : CalendarEntry()
 }

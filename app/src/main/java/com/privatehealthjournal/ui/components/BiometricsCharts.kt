@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -356,6 +357,102 @@ fun CholesterolChart(
             )
         }
     }
+}
+
+@Composable
+fun SpO2Chart(
+    entries: List<SpO2Entry>,
+    modifier: Modifier = Modifier
+) {
+    if (entries.isEmpty()) {
+        EmptyChartState("No SpO2 data to display")
+        return
+    }
+
+    val sortedEntries = remember(entries) { entries.sortedBy { it.timestamp } }
+    val chartColor = MaterialTheme.colorScheme.primary
+
+    val minTimestamp = remember(sortedEntries) { sortedEntries.minOf { it.timestamp } }
+    val msPerDay = 24 * 60 * 60 * 1000L
+
+    val chartEntryModelProducer = remember(sortedEntries) {
+        ChartEntryModelProducer(
+            sortedEntries.map { entry ->
+                val dayOffset = ((entry.timestamp - minTimestamp) / msPerDay).toFloat()
+                entryOf(dayOffset, entry.spo2.toFloat())
+            }
+        )
+    }
+
+    val lineSpec = remember(chartColor) {
+        listOf(
+            LineChart.LineSpec(
+                lineColor = chartColor.toArgb(),
+                lineBackgroundShader = DynamicShaders.fromBrush(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(
+                            chartColor.copy(alpha = 0.4f),
+                            chartColor.copy(alpha = 0f)
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    val bottomAxisFormatter = remember(sortedEntries, minTimestamp) {
+        AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+            val timestamp = minTimestamp + (value * msPerDay).toLong()
+            formatDateForAxis(timestamp)
+        }
+    }
+
+    val startAxisFormatter = remember {
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _ ->
+            "%.0f%%".format(value)
+        }
+    }
+
+    val axisLabelComponent = textComponent(
+        color = MaterialTheme.colorScheme.onSurface,
+        textSize = 9.sp,
+        typeface = Typeface.DEFAULT
+    )
+
+    Chart(
+        chart = lineChart(lines = lineSpec),
+        chartModelProducer = chartEntryModelProducer,
+        startAxis = rememberStartAxis(valueFormatter = startAxisFormatter),
+        bottomAxis = rememberBottomAxis(
+            label = axisLabelComponent,
+            valueFormatter = bottomAxisFormatter,
+            tickLength = 4.dp,
+            itemPlacer = AxisItemPlacer.Horizontal.default(spacing = 3)
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
+}
+
+@Composable
+fun SpO2SummaryCard(entries: List<SpO2Entry>) {
+    if (entries.isEmpty()) return
+
+    val latest = entries.maxByOrNull { it.timestamp }
+    val min = entries.minByOrNull { it.spo2 }
+    val max = entries.maxByOrNull { it.spo2 }
+    val avg = entries.map { it.spo2 }.average()
+
+    SummaryCard(
+        title = "SpO2 Summary",
+        items = listOf(
+            SummaryItem("Latest", latest?.let { "${it.spo2}%" } ?: "-"),
+            SummaryItem("Min", min?.let { "${it.spo2}%" } ?: "-"),
+            SummaryItem("Max", max?.let { "${it.spo2}%" } ?: "-"),
+            SummaryItem("Avg", "%.0f%%".format(avg))
+        )
+    )
 }
 
 @Composable

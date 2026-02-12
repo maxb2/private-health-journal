@@ -5,6 +5,7 @@ import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.google.gson.GsonBuilder
@@ -20,7 +21,8 @@ object DataExporter {
         otherEntries: List<OtherEntry>,
         bloodPressureEntries: List<BloodPressureEntry> = emptyList(),
         cholesterolEntries: List<CholesterolEntry> = emptyList(),
-        weightEntries: List<WeightEntry> = emptyList()
+        weightEntries: List<WeightEntry> = emptyList(),
+        spO2Entries: List<SpO2Entry> = emptyList()
     ): String {
         val exportData = ExportData(
             meals = meals.map { meal ->
@@ -83,6 +85,14 @@ object DataExporter {
                     unit = weight.unit.name,
                     notes = weight.notes,
                     timestamp = weight.timestamp
+                )
+            },
+            spO2Entries = spO2Entries.map { spo2 ->
+                ExportedSpO2(
+                    spo2 = spo2.spo2,
+                    pulse = spo2.pulse,
+                    notes = spo2.notes,
+                    timestamp = spo2.timestamp
                 )
             }
         )

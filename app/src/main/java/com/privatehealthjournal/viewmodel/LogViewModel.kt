@@ -16,6 +16,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -39,6 +40,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val allBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
     val allCholesterolEntries: StateFlow<List<CholesterolEntry>>
     val allWeightEntries: StateFlow<List<WeightEntry>>
+    val allSpO2Entries: StateFlow<List<SpO2Entry>>
     val ongoingSymptoms: StateFlow<List<SymptomEntry>>
     val recentMeals: StateFlow<List<MealWithDetails>>
     val recentSymptomEntries: StateFlow<List<SymptomEntry>>
@@ -48,6 +50,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val recentBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
     val recentCholesterolEntries: StateFlow<List<CholesterolEntry>>
     val recentWeightEntries: StateFlow<List<WeightEntry>>
+    val recentSpO2Entries: StateFlow<List<SpO2Entry>>
     val allTags: StateFlow<List<Tag>>
     val allMedicationNames: StateFlow<List<String>>
 
@@ -61,7 +64,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.otherEntryDao(),
             database.bloodPressureDao(),
             database.cholesterolDao(),
-            database.weightDao()
+            database.weightDao(),
+            database.spO2Dao()
         )
 
         allMeals = repository.allMeals
@@ -86,6 +90,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allWeightEntries = repository.allWeightEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allSpO2Entries = repository.allSpO2Entries
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         ongoingSymptoms = repository.ongoingSymptoms
@@ -113,6 +120,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         recentWeightEntries = repository.getRecentWeightEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentSpO2Entries = repository.getRecentSpO2Entries(5)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allTags = repository.allTags
@@ -334,6 +344,37 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // SpO2 methods
+    fun addSpO2(
+        spo2: Int,
+        pulse: Int? = null,
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        viewModelScope.launch {
+            repository.insertSpO2(
+                SpO2Entry(
+                    spo2 = spo2,
+                    pulse = pulse,
+                    notes = notes,
+                    timestamp = timestamp
+                )
+            )
+        }
+    }
+
+    fun updateSpO2(entry: SpO2Entry) {
+        viewModelScope.launch {
+            repository.updateSpO2(entry)
+        }
+    }
+
+    fun deleteSpO2(entry: SpO2Entry) {
+        viewModelScope.launch {
+            repository.deleteSpO2(entry)
+        }
+    }
+
     // Update methods
     fun updateSymptom(symptomEntry: SymptomEntry) {
         viewModelScope.launch {
@@ -381,6 +422,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _editingWeight = MutableStateFlow<WeightEntry?>(null)
     val editingWeight: StateFlow<WeightEntry?> = _editingWeight.asStateFlow()
+
+    private val _editingSpO2 = MutableStateFlow<SpO2Entry?>(null)
+    val editingSpO2: StateFlow<SpO2Entry?> = _editingSpO2.asStateFlow()
 
     fun loadSymptomForEditing(id: Long) {
         viewModelScope.launch {
@@ -430,6 +474,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadSpO2ForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingSpO2.value = repository.getSpO2ById(id)
+        }
+    }
+
     fun clearEditingState() {
         _editingSymptom.value = null
         _editingBowelMovement.value = null
@@ -439,6 +489,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         _editingBloodPressure.value = null
         _editingCholesterol.value = null
         _editingWeight.value = null
+        _editingSpO2.value = null
     }
 
     // Export/Import
@@ -452,7 +503,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     otherEntries = allOtherEntries.value,
                     bloodPressureEntries = allBloodPressureEntries.value,
                     cholesterolEntries = allCholesterolEntries.value,
-                    weightEntries = allWeightEntries.value
+                    weightEntries = allWeightEntries.value,
+                    spO2Entries = allSpO2Entries.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
@@ -460,7 +512,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val total = allMeals.value.size + allSymptomEntries.value.size +
                     allMedications.value.size + allOtherEntries.value.size +
                     allBloodPressureEntries.value.size + allCholesterolEntries.value.size +
-                    allWeightEntries.value.size
+                    allWeightEntries.value.size + allSpO2Entries.value.size
                 onResult(true, "Exported $total entries successfully")
             } catch (e: Exception) {
                 onResult(false, "Export failed: ${e.message}")

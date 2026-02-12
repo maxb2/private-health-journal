@@ -1,7 +1,7 @@
 package com.privatehealthjournal.data.export
 
 data class ExportData(
-    val version: Int = 2,
+    val version: Int = 3,
     val exportedAt: Long = System.currentTimeMillis(),
     val meals: List<ExportedMeal> = emptyList(),
     val symptoms: List<ExportedSymptom> = emptyList(),
@@ -9,7 +9,8 @@ data class ExportData(
     val otherEntries: List<ExportedOtherEntry> = emptyList(),
     val bloodPressureEntries: List<ExportedBloodPressure> = emptyList(),
     val cholesterolEntries: List<ExportedCholesterol> = emptyList(),
-    val weightEntries: List<ExportedWeight> = emptyList()
+    val weightEntries: List<ExportedWeight> = emptyList(),
+    val spO2Entries: List<ExportedSpO2> = emptyList()
 )
 
 data class ExportedMeal(
@@ -63,6 +64,13 @@ data class ExportedCholesterol(
 data class ExportedWeight(
     val weight: Double,
     val unit: String,
+    val notes: String,
+    val timestamp: Long
+)
+
+data class ExportedSpO2(
+    val spo2: Int,
+    val pulse: Int?,
     val notes: String,
     val timestamp: Long
 )
