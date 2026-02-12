@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew clean
 
 # Run app in emulator
-adb install -r app/build/outputs/apk/debug/app-debug.apk && adb shell am start -n com.foodsymptomlog/.MainActivity 2>&1
+adb install -r app/build/outputs/apk/debug/app-debug.apk && adb shell am start -n com.privatehealthjournal/.MainActivity 2>&1
 ```
 
 ## Tech Stack
