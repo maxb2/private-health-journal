@@ -20,6 +20,7 @@ import com.foodsymptomlog.ui.screens.AddMedicationScreen
 import com.foodsymptomlog.ui.screens.AddOtherEntryScreen
 import com.foodsymptomlog.ui.screens.AddSymptomScreen
 import com.foodsymptomlog.ui.screens.AddWeightScreen
+import com.foodsymptomlog.ui.screens.BiometricsChartScreen
 import com.foodsymptomlog.ui.screens.CalendarScreen
 import com.foodsymptomlog.ui.screens.HistoryScreen
 import com.foodsymptomlog.ui.screens.HomeScreen
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
                                 onAddBloodPressure = { navController.navigate("add_blood_pressure") },
                                 onAddCholesterol = { navController.navigate("add_cholesterol") },
                                 onAddWeight = { navController.navigate("add_weight") },
+                                onViewBiometricsChart = { navController.navigate("biometrics_chart") },
                                 onViewHistory = { navController.navigate("history") },
                                 onViewCalendar = { navController.navigate("calendar") },
                                 onViewSettings = { navController.navigate("settings") },
@@ -151,6 +153,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("settings") {
                             SettingsScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("biometrics_chart") {
+                            BiometricsChartScreen(
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )

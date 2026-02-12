@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,6 +79,7 @@ fun HomeScreen(
     onAddBloodPressure: () -> Unit,
     onAddCholesterol: () -> Unit,
     onAddWeight: () -> Unit,
+    onViewBiometricsChart: () -> Unit = {},
     onViewHistory: () -> Unit,
     onViewCalendar: () -> Unit = {},
     onViewSettings: () -> Unit = {},
@@ -250,6 +252,20 @@ fun HomeScreen(
                             onClick = {
                                 biometricsMenuExpanded = false
                                 onAddWeight()
+                            }
+                        )
+                        Divider()
+                        DropdownMenuItem(
+                            text = { Text("View Charts") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ShowChart,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                biometricsMenuExpanded = false
+                                onViewBiometricsChart()
                             }
                         )
                     }
