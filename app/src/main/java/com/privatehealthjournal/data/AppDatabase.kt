@@ -11,6 +11,8 @@ import com.privatehealthjournal.data.dao.CholesterolDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.MedicationSetDao
+import com.privatehealthjournal.data.dao.MedicationSetLogDao
+import com.privatehealthjournal.data.dao.MedicationSetReminderDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
 import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
@@ -25,6 +27,8 @@ import com.privatehealthjournal.data.entity.MealTagCrossRef
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.MedicationSet
 import com.privatehealthjournal.data.entity.MedicationSetItem
+import com.privatehealthjournal.data.entity.MedicationSetLog
+import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
@@ -47,9 +51,11 @@ import com.privatehealthjournal.data.entity.WeightEntry
         SpO2Entry::class,
         BloodGlucoseEntry::class,
         MedicationSet::class,
-        MedicationSetItem::class
+        MedicationSetItem::class,
+        MedicationSetReminder::class,
+        MedicationSetLog::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -64,6 +70,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun spO2Dao(): SpO2Dao
     abstract fun bloodGlucoseDao(): BloodGlucoseDao
     abstract fun medicationSetDao(): MedicationSetDao
+    abstract fun medicationSetReminderDao(): MedicationSetReminderDao
+    abstract fun medicationSetLogDao(): MedicationSetLogDao
 
     companion object {
         @Volatile

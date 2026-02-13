@@ -7,6 +7,8 @@ import com.privatehealthjournal.data.dao.CholesterolDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.MedicationSetDao
+import com.privatehealthjournal.data.dao.MedicationSetLogDao
+import com.privatehealthjournal.data.dao.MedicationSetReminderDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
 import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
@@ -20,6 +22,8 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.MedicationSet
+import com.privatehealthjournal.data.entity.MedicationSetLog
+import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
@@ -40,7 +44,9 @@ class LogRepository(
     private val weightDao: WeightDao,
     private val spO2Dao: SpO2Dao,
     private val bloodGlucoseDao: BloodGlucoseDao,
-    private val medicationSetDao: MedicationSetDao
+    private val medicationSetDao: MedicationSetDao,
+    private val medicationSetReminderDao: MedicationSetReminderDao,
+    private val medicationSetLogDao: MedicationSetLogDao
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -312,5 +318,45 @@ class LogRepository(
 
     suspend fun getMedicationSetWithItemsById(id: Long): MedicationSetWithItems? {
         return medicationSetDao.getSetWithItemsById(id)
+    }
+
+    // Medication Set Reminder methods
+    fun getRemindersForSet(setId: Long): Flow<List<MedicationSetReminder>> =
+        medicationSetReminderDao.getRemindersForSet(setId)
+
+    fun getAllReminders(): Flow<List<MedicationSetReminder>> =
+        medicationSetReminderDao.getAllReminders()
+
+    suspend fun getAllEnabledReminders(): List<MedicationSetReminder> =
+        medicationSetReminderDao.getAllEnabledReminders()
+
+    suspend fun getReminderById(id: Long): MedicationSetReminder? =
+        medicationSetReminderDao.getById(id)
+
+    suspend fun insertReminder(reminder: MedicationSetReminder): Long =
+        medicationSetReminderDao.insert(reminder)
+
+    suspend fun updateReminder(reminder: MedicationSetReminder) =
+        medicationSetReminderDao.update(reminder)
+
+    suspend fun deleteReminder(reminder: MedicationSetReminder) =
+        medicationSetReminderDao.delete(reminder)
+
+    suspend fun deleteReminderById(id: Long) =
+        medicationSetReminderDao.deleteById(id)
+
+    // Medication Set Log methods
+    suspend fun insertMedicationSetLog(log: MedicationSetLog): Long =
+        medicationSetLogDao.insert(log)
+
+    suspend fun hasSetBeenLoggedToday(setId: Long): Boolean {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfDay = calendar.timeInMillis
+        val endOfDay = startOfDay + 86_400_000L
+        return medicationSetLogDao.getLogForSetOnDay(setId, startOfDay, endOfDay) != null
     }
 }

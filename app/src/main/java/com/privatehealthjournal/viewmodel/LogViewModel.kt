@@ -17,6 +17,8 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.MedicationSet
+import com.privatehealthjournal.data.entity.MedicationSetLog
+import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
@@ -28,10 +30,12 @@ import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
 import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.notification.ReminderScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -43,6 +47,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val allBowelMovements: StateFlow<List<BowelMovementEntry>>
     val allMedications: StateFlow<List<MedicationEntry>>
     val allMedicationSets: StateFlow<List<MedicationSetWithItems>>
+    val allRemindersBySet: StateFlow<Map<Long, List<MedicationSetReminder>>>
     val allOtherEntries: StateFlow<List<OtherEntry>>
     val allBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
     val allCholesterolEntries: StateFlow<List<CholesterolEntry>>
@@ -83,7 +88,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.weightDao(),
             database.spO2Dao(),
             database.bloodGlucoseDao(),
-            database.medicationSetDao()
+            database.medicationSetDao(),
+            database.medicationSetReminderDao(),
+            database.medicationSetLogDao()
         )
 
         allMeals = repository.allMeals
@@ -100,6 +107,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         allMedicationSets = repository.allMedicationSets
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allRemindersBySet = repository.getAllReminders()
+            .map { reminders -> reminders.groupBy { it.setId } }
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
         allOtherEntries = repository.allOtherEntries
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -626,6 +637,38 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
             }
+            repository.insertMedicationSetLog(
+                MedicationSetLog(setId = setWithItems.set.id, timestamp = timestamp)
+            )
+            // Dismiss any pending notification for this set
+            ReminderScheduler.dismissNotification(getApplication(), setWithItems.set.id)
+        }
+    }
+
+    // Reminder methods
+    fun addReminder(reminder: MedicationSetReminder) {
+        viewModelScope.launch {
+            val id = repository.insertReminder(reminder)
+            val saved = reminder.copy(id = id)
+            ReminderScheduler.scheduleReminder(getApplication(), saved)
+        }
+    }
+
+    fun updateReminder(reminder: MedicationSetReminder) {
+        viewModelScope.launch {
+            repository.updateReminder(reminder)
+            if (reminder.enabled) {
+                ReminderScheduler.scheduleReminder(getApplication(), reminder)
+            } else {
+                ReminderScheduler.cancelReminder(getApplication(), reminder.id)
+            }
+        }
+    }
+
+    fun deleteReminder(reminder: MedicationSetReminder) {
+        viewModelScope.launch {
+            ReminderScheduler.cancelReminder(getApplication(), reminder.id)
+            repository.deleteReminder(reminder)
         }
     }
 

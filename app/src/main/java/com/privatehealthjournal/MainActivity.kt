@@ -1,11 +1,19 @@
 package com.privatehealthjournal
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -29,12 +37,23 @@ import com.privatehealthjournal.ui.screens.HistoryScreen
 import com.privatehealthjournal.ui.screens.HomeScreen
 import com.privatehealthjournal.ui.screens.MedicationSetsScreen
 import com.privatehealthjournal.ui.screens.SettingsScreen
+import com.privatehealthjournal.notification.ReminderBroadcastReceiver
 import com.privatehealthjournal.ui.theme.PrivateHealthJournalTheme
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _: Boolean -> }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel()
+        requestNotificationPermission()
+
+        val navigateTo = intent?.getStringExtra("navigate_to")
+
         setContent {
             PrivateHealthJournalTheme {
                 Surface(
@@ -43,6 +62,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val viewModel: LogViewModel = viewModel()
+
+                    LaunchedEffect(navigateTo) {
+                        if (navigateTo != null) {
+                            navController.navigate(navigateTo)
+                        }
+                    }
 
                     NavHost(
                         navController = navController,
@@ -341,6 +366,30 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            ReminderBroadcastReceiver.CHANNEL_ID,
+            "Medication Reminders",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Reminders to log medication sets"
+        }
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
