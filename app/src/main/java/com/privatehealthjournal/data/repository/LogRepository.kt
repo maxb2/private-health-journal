@@ -19,6 +19,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
@@ -50,6 +51,10 @@ class LogRepository(
     val allWeightEntries: Flow<List<WeightEntry>> = weightDao.getAllWeightEntries()
     val allSpO2Entries: Flow<List<SpO2Entry>> = spO2Dao.getAllSpO2Entries()
     val allBloodGlucoseEntries: Flow<List<BloodGlucoseEntry>> = bloodGlucoseDao.getAllBloodGlucoseEntries()
+    val allFoodNames: Flow<List<String>> = mealDao.getAllFoodNames()
+    val allSymptomNames: Flow<List<String>> = symptomEntryDao.getAllSymptomNames()
+    fun getDistinctOtherSubTypes(type: OtherEntryType): Flow<List<String>> =
+        otherEntryDao.getDistinctSubTypes(type)
 
     fun getRecentMeals(limit: Int = 5): Flow<List<MealWithDetails>> {
         return mealDao.getRecentMealsWithDetails(limit)

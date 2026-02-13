@@ -80,6 +80,7 @@ fun AddMealScreen(
     var existingId by remember { mutableStateOf<Long?>(null) }
 
     val existingTags by viewModel.allTags.collectAsState()
+    val foodNames by viewModel.allFoodNames.collectAsState()
 
     // Load existing entry for editing
     LaunchedEffect(editId) {
@@ -239,6 +240,45 @@ fun AddMealScreen(
                 }
             }
 
+            // Food name suggestions
+            if (foodNames.isNotEmpty()) {
+                val filteredFoods = if (currentFood.isBlank()) {
+                    foodNames.filter { it !in foods }.take(8)
+                } else {
+                    foodNames.filter {
+                        it.contains(currentFood, ignoreCase = true) &&
+                            !it.equals(currentFood, ignoreCase = true) &&
+                            it !in foods
+                    }.take(5)
+                }
+                if (filteredFoods.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Suggestions:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        filteredFoods.forEach { suggestion ->
+                            AssistChip(
+                                onClick = {
+                                    foods.add(suggestion)
+                                    currentFood = ""
+                                },
+                                label = { Text(suggestion) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Tags Section
@@ -248,35 +288,6 @@ fun AddMealScreen(
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Show existing tags as suggestions
-            if (existingTags.isNotEmpty()) {
-                Text(
-                    text = "Suggestions:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    existingTags
-                        .filter { it.name !in tags }
-                        .take(10)
-                        .forEach { tag ->
-                            AssistChip(
-                                onClick = { tags.add(tag.name) },
-                                label = { Text(tag.name) },
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            )
-                        }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
             if (tags.isNotEmpty()) {
                 FlowRow(
@@ -338,6 +349,46 @@ fun AddMealScreen(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add tag"
                     )
+                }
+            }
+
+            // Show existing tags as suggestions (filtered by typed text)
+            if (existingTags.isNotEmpty()) {
+                val filteredTags = if (currentTag.isBlank()) {
+                    existingTags.filter { it.name !in tags }.take(10)
+                } else {
+                    existingTags.filter {
+                        it.name.contains(currentTag, ignoreCase = true) &&
+                            !it.name.equals(currentTag, ignoreCase = true) &&
+                            it.name !in tags
+                    }.take(5)
+                }
+                if (filteredTags.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Suggestions:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        filteredTags.forEach { tag ->
+                            AssistChip(
+                                onClick = {
+                                    tags.add(tag.name)
+                                    currentTag = ""
+                                },
+                                label = { Text(tag.name) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            )
+                        }
+                    }
                 }
             }
 

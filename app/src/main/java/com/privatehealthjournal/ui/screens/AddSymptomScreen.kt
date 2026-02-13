@@ -1,7 +1,10 @@
 package com.privatehealthjournal.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -45,7 +50,7 @@ import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.viewmodel.LogViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddSymptomScreen(
     viewModel: LogViewModel,
@@ -54,6 +59,7 @@ fun AddSymptomScreen(
     prefillName: String? = null
 ) {
     val editingSymptom by viewModel.editingSymptom.collectAsState()
+    val symptomNames by viewModel.allSymptomNames.collectAsState()
     val isEditMode = editId != null
 
     var symptomName by remember { mutableStateOf(prefillName ?: "") }
@@ -134,6 +140,41 @@ fun AddSymptomScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+
+            // Symptom name suggestions
+            if (symptomNames.isNotEmpty()) {
+                val filtered = if (symptomName.isBlank()) {
+                    symptomNames.take(8)
+                } else {
+                    symptomNames.filter {
+                        it.contains(symptomName, ignoreCase = true) &&
+                            !it.equals(symptomName, ignoreCase = true)
+                    }.take(5)
+                }
+                if (filtered.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Previous symptoms:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        filtered.forEach { suggestion ->
+                            AssistChip(
+                                onClick = { symptomName = suggestion },
+                                label = { Text(suggestion) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

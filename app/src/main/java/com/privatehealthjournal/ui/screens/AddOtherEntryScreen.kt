@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,7 +53,7 @@ import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.viewmodel.LogViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddOtherEntryScreen(
     viewModel: LogViewModel,
@@ -58,6 +62,10 @@ fun AddOtherEntryScreen(
     preselectedType: String? = null
 ) {
     val editingOtherEntry by viewModel.editingOtherEntry.collectAsState()
+    val exerciseTypes by viewModel.exerciseTypes.collectAsState()
+    val sleepQualities by viewModel.sleepQualities.collectAsState()
+    val stressSources by viewModel.stressSources.collectAsState()
+    val otherCategories by viewModel.otherCategories.collectAsState()
     val isEditMode = editId != null
 
     val initialType = preselectedType?.let {
@@ -161,6 +169,11 @@ fun AddOtherEntryScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                    SubTypeSuggestions(
+                        suggestions = sleepQualities,
+                        currentText = subType,
+                        onSelect = { subType = it }
+                    )
                 }
                 OtherEntryType.EXERCISE -> {
                     OutlinedTextField(
@@ -170,6 +183,11 @@ fun AddOtherEntryScreen(
                         placeholder = { Text("e.g., Walking, Running, Yoga") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
+                    )
+                    SubTypeSuggestions(
+                        suggestions = exerciseTypes,
+                        currentText = subType,
+                        onSelect = { subType = it }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -199,6 +217,11 @@ fun AddOtherEntryScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                    SubTypeSuggestions(
+                        suggestions = stressSources,
+                        currentText = subType,
+                        onSelect = { subType = it }
+                    )
                 }
                 OtherEntryType.WATER_INTAKE -> {
                     OutlinedTextField(
@@ -218,6 +241,11 @@ fun AddOtherEntryScreen(
                         placeholder = { Text("e.g., Supplement, Event") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
+                    )
+                    SubTypeSuggestions(
+                        suggestions = otherCategories,
+                        currentText = subType,
+                        onSelect = { subType = it }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -446,6 +474,46 @@ private fun getTypeTitle(type: OtherEntryType): String {
         OtherEntryType.STRESS -> "Stress"
         OtherEntryType.WATER_INTAKE -> "Water Intake"
         OtherEntryType.OTHER -> "Other"
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SubTypeSuggestions(
+    suggestions: List<String>,
+    currentText: String,
+    onSelect: (String) -> Unit
+) {
+    if (suggestions.isEmpty()) return
+    val filtered = if (currentText.isBlank()) {
+        suggestions.take(8)
+    } else {
+        suggestions.filter {
+            it.contains(currentText, ignoreCase = true) &&
+                !it.equals(currentText, ignoreCase = true)
+        }.take(5)
+    }
+    if (filtered.isEmpty()) return
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = "Suggestions:",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        filtered.forEach { suggestion ->
+            AssistChip(
+                onClick = { onSelect(suggestion) },
+                label = { Text(suggestion) },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            )
+        }
     }
 }
 

@@ -36,4 +36,7 @@ interface SymptomEntryDao {
 
     @Query("DELETE FROM symptom_entries WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT DISTINCT name FROM symptom_entries ORDER BY name ASC")
+    fun getAllSymptomNames(): Flow<List<String>>
 }
