@@ -18,6 +18,7 @@ import com.privatehealthjournal.ui.screens.AddBloodPressureScreen
 import com.privatehealthjournal.ui.screens.AddCholesterolScreen
 import com.privatehealthjournal.ui.screens.AddMealScreen
 import com.privatehealthjournal.ui.screens.AddMedicationScreen
+import com.privatehealthjournal.ui.screens.AddMedicationSetScreen
 import com.privatehealthjournal.ui.screens.AddOtherEntryScreen
 import com.privatehealthjournal.ui.screens.AddSpO2Screen
 import com.privatehealthjournal.ui.screens.AddSymptomScreen
@@ -26,6 +27,7 @@ import com.privatehealthjournal.ui.screens.BiometricsChartScreen
 import com.privatehealthjournal.ui.screens.CalendarScreen
 import com.privatehealthjournal.ui.screens.HistoryScreen
 import com.privatehealthjournal.ui.screens.HomeScreen
+import com.privatehealthjournal.ui.screens.MedicationSetsScreen
 import com.privatehealthjournal.ui.screens.SettingsScreen
 import com.privatehealthjournal.ui.theme.PrivateHealthJournalTheme
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -76,7 +78,8 @@ class MainActivity : ComponentActivity() {
                                 onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
-                                onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") }
+                                onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
+                                onViewMedicationSets = { navController.navigate("medication_sets") }
                             )
                         }
                         composable(
@@ -209,6 +212,31 @@ class MainActivity : ComponentActivity() {
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
                                 onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") }
+                            )
+                        }
+                        composable("medication_sets") {
+                            MedicationSetsScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                onAddSet = { navController.navigate("add_medication_set") },
+                                onEditSet = { id -> navController.navigate("edit_medication_set/$id") }
+                            )
+                        }
+                        composable("add_medication_set") {
+                            AddMedicationSetScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(
+                            route = "edit_medication_set/{setId}",
+                            arguments = listOf(navArgument("setId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val setId = backStackEntry.arguments?.getLong("setId")
+                            AddMedicationSetScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                editId = setId
                             )
                         }
                         // Edit routes

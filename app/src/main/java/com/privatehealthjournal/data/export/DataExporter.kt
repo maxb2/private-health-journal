@@ -5,6 +5,7 @@ import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
+import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.data.entity.SymptomEntry
@@ -24,7 +25,8 @@ object DataExporter {
         cholesterolEntries: List<CholesterolEntry> = emptyList(),
         weightEntries: List<WeightEntry> = emptyList(),
         spO2Entries: List<SpO2Entry> = emptyList(),
-        bloodGlucoseEntries: List<BloodGlucoseEntry> = emptyList()
+        bloodGlucoseEntries: List<BloodGlucoseEntry> = emptyList(),
+        medicationSets: List<MedicationSetWithItems> = emptyList()
     ): String {
         val exportData = ExportData(
             meals = meals.map { meal ->
@@ -104,6 +106,17 @@ object DataExporter {
                     mealContext = bg.mealContext?.name,
                     notes = bg.notes,
                     timestamp = bg.timestamp
+                )
+            },
+            medicationSets = medicationSets.map { setWithItems ->
+                ExportedMedicationSet(
+                    name = setWithItems.set.name,
+                    items = setWithItems.items.map { item ->
+                        ExportedMedicationSetItem(
+                            name = item.name,
+                            dosage = item.dosage
+                        )
+                    }
                 )
             }
         )

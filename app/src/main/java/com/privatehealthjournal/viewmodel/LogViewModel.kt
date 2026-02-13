@@ -16,6 +16,8 @@ import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
+import com.privatehealthjournal.data.entity.MedicationSet
+import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.GlucoseMealContext
@@ -40,6 +42,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val allSymptomEntries: StateFlow<List<SymptomEntry>>
     val allBowelMovements: StateFlow<List<BowelMovementEntry>>
     val allMedications: StateFlow<List<MedicationEntry>>
+    val allMedicationSets: StateFlow<List<MedicationSetWithItems>>
     val allOtherEntries: StateFlow<List<OtherEntry>>
     val allBloodPressureEntries: StateFlow<List<BloodPressureEntry>>
     val allCholesterolEntries: StateFlow<List<CholesterolEntry>>
@@ -78,7 +81,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.cholesterolDao(),
             database.weightDao(),
             database.spO2Dao(),
-            database.bloodGlucoseDao()
+            database.bloodGlucoseDao(),
+            database.medicationSetDao()
         )
 
         allMeals = repository.allMeals
@@ -91,6 +95,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allMedications = repository.allMedications
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allMedicationSets = repository.allMedicationSets
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allOtherEntries = repository.allOtherEntries
@@ -499,6 +506,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _editingBloodGlucose = MutableStateFlow<BloodGlucoseEntry?>(null)
     val editingBloodGlucose: StateFlow<BloodGlucoseEntry?> = _editingBloodGlucose.asStateFlow()
 
+    private val _editingMedicationSet = MutableStateFlow<MedicationSetWithItems?>(null)
+    val editingMedicationSet: StateFlow<MedicationSetWithItems?> = _editingMedicationSet.asStateFlow()
+
     fun loadSymptomForEditing(id: Long) {
         viewModelScope.launch {
             _editingSymptom.value = repository.getSymptomById(id)
@@ -559,6 +569,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadMedicationSetForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingMedicationSet.value = repository.getMedicationSetWithItemsById(id)
+        }
+    }
+
     fun clearEditingState() {
         _editingSymptom.value = null
         _editingBowelMovement.value = null
@@ -570,6 +586,43 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         _editingWeight.value = null
         _editingSpO2.value = null
         _editingBloodGlucose.value = null
+        _editingMedicationSet.value = null
+    }
+
+    // Medication Set methods
+    fun addMedicationSet(name: String, items: List<Pair<String, String>>) {
+        viewModelScope.launch {
+            repository.insertMedicationSet(name, items)
+        }
+    }
+
+    fun updateMedicationSet(id: Long, name: String, items: List<Pair<String, String>>) {
+        viewModelScope.launch {
+            repository.updateMedicationSet(MedicationSet(id = id, name = name), items)
+        }
+    }
+
+    fun deleteMedicationSet(id: Long) {
+        viewModelScope.launch {
+            repository.deleteMedicationSetById(id)
+        }
+    }
+
+    fun logMedicationSet(setWithItems: MedicationSetWithItems) {
+        viewModelScope.launch {
+            val timestamp = System.currentTimeMillis()
+            val notes = "Logged from set: ${setWithItems.set.name}"
+            setWithItems.items.forEach { item ->
+                repository.insertMedication(
+                    MedicationEntry(
+                        name = item.name,
+                        dosage = item.dosage,
+                        notes = notes,
+                        timestamp = timestamp
+                    )
+                )
+            }
+        }
     }
 
     // Export/Import
@@ -585,7 +638,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     cholesterolEntries = allCholesterolEntries.value,
                     weightEntries = allWeightEntries.value,
                     spO2Entries = allSpO2Entries.value,
-                    bloodGlucoseEntries = allBloodGlucoseEntries.value
+                    bloodGlucoseEntries = allBloodGlucoseEntries.value,
+                    medicationSets = allMedicationSets.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())

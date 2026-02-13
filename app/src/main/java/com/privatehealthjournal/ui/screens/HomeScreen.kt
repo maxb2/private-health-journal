@@ -99,7 +99,8 @@ fun HomeScreen(
     onEditCholesterol: (Long) -> Unit = {},
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
-    onEditBloodGlucose: (Long) -> Unit = {}
+    onEditBloodGlucose: (Long) -> Unit = {},
+    onViewMedicationSets: () -> Unit = {}
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
@@ -111,6 +112,7 @@ fun HomeScreen(
     val recentSpO2 by viewModel.recentSpO2Entries.collectAsState()
     val recentBloodGlucose by viewModel.recentBloodGlucoseEntries.collectAsState()
 
+    var medsMenuExpanded by remember { mutableStateOf(false) }
     var biometricsMenuExpanded by remember { mutableStateOf(false) }
     var otherMenuExpanded by remember { mutableStateOf(false) }
 
@@ -193,20 +195,46 @@ fun HomeScreen(
                     Text("Symptom")
                 }
 
-                // Medication button
-                Button(
-                    onClick = { onAddMedication(null) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Medication,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Meds")
+                // Medication dropdown
+                Box {
+                    Button(
+                        onClick = { medsMenuExpanded = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Medication,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Meds")
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = medsMenuExpanded,
+                        onDismissRequest = { medsMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Log Medication") },
+                            onClick = {
+                                medsMenuExpanded = false
+                                onAddMedication(null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Medication Sets") },
+                            onClick = {
+                                medsMenuExpanded = false
+                                onViewMedicationSets()
+                            }
+                        )
+                    }
                 }
 
                 // Biometrics dropdown

@@ -34,6 +34,7 @@ object DataImporter {
             var weightImported = 0
             var spO2Imported = 0
             var bloodGlucoseImported = 0
+            var medicationSetsImported = 0
 
             // Import meals
             exportData.meals.forEach { meal ->
@@ -184,6 +185,13 @@ object DataImporter {
                 bloodGlucoseImported++
             }
 
+            // Import medication sets
+            exportData.medicationSets.forEach { exportedSet ->
+                val items = exportedSet.items.map { it.name to it.dosage }
+                repository.insertMedicationSet(exportedSet.name, items)
+                medicationSetsImported++
+            }
+
             ImportResult.Success(
                 mealsImported = mealsImported,
                 symptomsImported = symptomsImported,
@@ -193,7 +201,8 @@ object DataImporter {
                 cholesterolImported = cholesterolImported,
                 weightImported = weightImported,
                 spO2Imported = spO2Imported,
-                bloodGlucoseImported = bloodGlucoseImported
+                bloodGlucoseImported = bloodGlucoseImported,
+                medicationSetsImported = medicationSetsImported
             )
         } catch (e: Exception) {
             ImportResult.Error("Failed to import: ${e.message}")
@@ -211,12 +220,13 @@ sealed class ImportResult {
         val cholesterolImported: Int = 0,
         val weightImported: Int = 0,
         val spO2Imported: Int = 0,
-        val bloodGlucoseImported: Int = 0
+        val bloodGlucoseImported: Int = 0,
+        val medicationSetsImported: Int = 0
     ) : ImportResult() {
         val totalImported: Int
             get() = mealsImported + symptomsImported + medicationsImported + otherEntriesImported +
                     bloodPressureImported + cholesterolImported + weightImported + spO2Imported +
-                    bloodGlucoseImported
+                    bloodGlucoseImported + medicationSetsImported
     }
 
     data class Error(val message: String) : ImportResult()

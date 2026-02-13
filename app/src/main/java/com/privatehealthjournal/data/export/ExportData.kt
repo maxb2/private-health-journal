@@ -11,7 +11,8 @@ data class ExportData(
     val cholesterolEntries: List<ExportedCholesterol> = emptyList(),
     val weightEntries: List<ExportedWeight> = emptyList(),
     val spO2Entries: List<ExportedSpO2> = emptyList(),
-    val bloodGlucoseEntries: List<ExportedBloodGlucose> = emptyList()
+    val bloodGlucoseEntries: List<ExportedBloodGlucose> = emptyList(),
+    val medicationSets: List<ExportedMedicationSet> = emptyList()
 )
 
 data class ExportedMeal(
@@ -82,4 +83,14 @@ data class ExportedBloodGlucose(
     val mealContext: String?,
     val notes: String,
     val timestamp: Long
+)
+
+data class ExportedMedicationSet(
+    val name: String,
+    val items: List<ExportedMedicationSetItem>
+)
+
+data class ExportedMedicationSetItem(
+    val name: String,
+    val dosage: String
 )
