@@ -6,6 +6,7 @@ import com.privatehealthjournal.data.dao.CholesterolDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
+import com.privatehealthjournal.data.dao.BloodGlucoseDao
 import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
@@ -33,6 +34,7 @@ class LogRepositoryTest {
     private lateinit var cholesterolDao: CholesterolDao
     private lateinit var weightDao: WeightDao
     private lateinit var spO2Dao: SpO2Dao
+    private lateinit var bloodGlucoseDao: BloodGlucoseDao
     private lateinit var repository: LogRepository
 
     @Before
@@ -46,6 +48,7 @@ class LogRepositoryTest {
         cholesterolDao = mockk(relaxed = true)
         weightDao = mockk(relaxed = true)
         spO2Dao = mockk(relaxed = true)
+        bloodGlucoseDao = mockk(relaxed = true)
 
         every { mealDao.getAllMealsWithDetails() } returns flowOf(emptyList())
         every { mealDao.getAllTags() } returns flowOf(emptyList())
@@ -59,6 +62,7 @@ class LogRepositoryTest {
         every { cholesterolDao.getAllCholesterolEntries() } returns flowOf(emptyList())
         every { weightDao.getAllWeightEntries() } returns flowOf(emptyList())
         every { spO2Dao.getAllSpO2Entries() } returns flowOf(emptyList())
+        every { bloodGlucoseDao.getAllBloodGlucoseEntries() } returns flowOf(emptyList())
 
         repository = LogRepository(
             mealDao,
@@ -69,7 +73,8 @@ class LogRepositoryTest {
             bloodPressureDao,
             cholesterolDao,
             weightDao,
-            spO2Dao
+            spO2Dao,
+            bloodGlucoseDao
         )
     }
 
