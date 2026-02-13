@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.BrunchDining
 import androidx.compose.material.icons.filled.Cookie
@@ -335,6 +336,7 @@ fun OtherEntryCard(
         OtherEntryType.SLEEP -> Icons.Default.Bedtime
         OtherEntryType.EXERCISE -> Icons.Default.FitnessCenter
         OtherEntryType.STRESS -> Icons.Default.Psychology
+        OtherEntryType.MOOD -> Icons.Default.SentimentSatisfied
         OtherEntryType.WATER_INTAKE -> Icons.Default.WaterDrop
         OtherEntryType.OTHER -> Icons.Default.MoreHoriz
     }
@@ -344,6 +346,7 @@ fun OtherEntryCard(
         OtherEntryType.SLEEP -> "Sleep"
         OtherEntryType.EXERCISE -> "Exercise"
         OtherEntryType.STRESS -> "Stress"
+        OtherEntryType.MOOD -> "Mood"
         OtherEntryType.WATER_INTAKE -> "Water Intake"
         OtherEntryType.OTHER -> entry.subType.ifBlank { "Other" }
     }
@@ -368,6 +371,13 @@ fun OtherEntryCard(
             }
         }
         OtherEntryType.STRESS -> buildString {
+            if (entry.value.isNotBlank()) append("Level: ${entry.value}")
+            if (entry.subType.isNotBlank()) {
+                if (isNotEmpty()) append(" - ")
+                append(entry.subType)
+            }
+        }
+        OtherEntryType.MOOD -> buildString {
             if (entry.value.isNotBlank()) append("Level: ${entry.value}")
             if (entry.subType.isNotBlank()) {
                 if (isNotEmpty()) append(" - ")

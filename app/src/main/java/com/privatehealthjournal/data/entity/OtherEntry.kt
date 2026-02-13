@@ -8,6 +8,7 @@ enum class OtherEntryType {
     SLEEP,
     EXERCISE,
     STRESS,
+    MOOD,
     WATER_INTAKE,
     OTHER
 }

@@ -46,6 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.BristolType
 import com.privatehealthjournal.data.entity.OtherEntry
@@ -65,6 +67,7 @@ fun AddOtherEntryScreen(
     val exerciseTypes by viewModel.exerciseTypes.collectAsState()
     val sleepQualities by viewModel.sleepQualities.collectAsState()
     val stressSources by viewModel.stressSources.collectAsState()
+    val moodDescriptions by viewModel.moodDescriptions.collectAsState()
     val otherCategories by viewModel.otherCategories.collectAsState()
     val isEditMode = editId != null
 
@@ -219,6 +222,35 @@ fun AddOtherEntryScreen(
                     )
                     SubTypeSuggestions(
                         suggestions = stressSources,
+                        currentText = subType,
+                        onSelect = { subType = it }
+                    )
+                }
+                OtherEntryType.MOOD -> {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { newValue ->
+                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                value = newValue
+                            }
+                        },
+                        label = { Text("Mood Level (1-10)") },
+                        placeholder = { Text("e.g., 7") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = subType,
+                        onValueChange = { subType = it },
+                        label = { Text("Description") },
+                        placeholder = { Text("e.g., Happy, Anxious, Calm") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    SubTypeSuggestions(
+                        suggestions = moodDescriptions,
                         currentText = subType,
                         onSelect = { subType = it }
                     )
@@ -472,6 +504,7 @@ private fun getTypeTitle(type: OtherEntryType): String {
         OtherEntryType.SLEEP -> "Sleep"
         OtherEntryType.EXERCISE -> "Exercise"
         OtherEntryType.STRESS -> "Stress"
+        OtherEntryType.MOOD -> "Mood"
         OtherEntryType.WATER_INTAKE -> "Water Intake"
         OtherEntryType.OTHER -> "Other"
     }

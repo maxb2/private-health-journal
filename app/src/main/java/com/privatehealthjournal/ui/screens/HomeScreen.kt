@@ -368,6 +368,13 @@ fun HomeScreen(
                             }
                         )
                         DropdownMenuItem(
+                            text = { Text("Mood") },
+                            onClick = {
+                                otherMenuExpanded = false
+                                onAddOther("MOOD")
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("Water Intake") },
                             onClick = {
                                 otherMenuExpanded = false

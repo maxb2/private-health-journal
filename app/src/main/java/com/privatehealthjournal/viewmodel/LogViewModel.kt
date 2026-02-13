@@ -67,6 +67,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val exerciseTypes: StateFlow<List<String>>
     val sleepQualities: StateFlow<List<String>>
     val stressSources: StateFlow<List<String>>
+    val moodDescriptions: StateFlow<List<String>>
     val otherCategories: StateFlow<List<String>>
 
     init {
@@ -170,6 +171,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         stressSources = repository.getDistinctOtherSubTypes(OtherEntryType.STRESS)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        moodDescriptions = repository.getDistinctOtherSubTypes(OtherEntryType.MOOD)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         otherCategories = repository.getDistinctOtherSubTypes(OtherEntryType.OTHER)
