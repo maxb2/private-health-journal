@@ -17,6 +17,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
+import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.GlucoseMealContext
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.SpO2Entry
@@ -58,6 +59,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val recentBloodGlucoseEntries: StateFlow<List<BloodGlucoseEntry>>
     val allTags: StateFlow<List<Tag>>
     val allMedicationNames: StateFlow<List<String>>
+    val allFoodNames: StateFlow<List<String>>
+    val allSymptomNames: StateFlow<List<String>>
+    val exerciseTypes: StateFlow<List<String>>
+    val sleepQualities: StateFlow<List<String>>
+    val stressSources: StateFlow<List<String>>
+    val otherCategories: StateFlow<List<String>>
 
     init {
         val database = AppDatabase.getDatabase(application)
@@ -141,6 +148,24 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
         allMedicationNames = repository.allMedicationNames
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allFoodNames = repository.allFoodNames
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        allSymptomNames = repository.allSymptomNames
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        exerciseTypes = repository.getDistinctOtherSubTypes(OtherEntryType.EXERCISE)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        sleepQualities = repository.getDistinctOtherSubTypes(OtherEntryType.SLEEP)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        stressSources = repository.getDistinctOtherSubTypes(OtherEntryType.STRESS)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        otherCategories = repository.getDistinctOtherSubTypes(OtherEntryType.OTHER)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     }
 

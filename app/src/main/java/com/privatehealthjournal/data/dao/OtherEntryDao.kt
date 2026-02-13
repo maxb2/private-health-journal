@@ -34,4 +34,7 @@ interface OtherEntryDao {
 
     @Query("DELETE FROM other_entries WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT DISTINCT subType FROM other_entries WHERE entryType = :type AND subType != '' ORDER BY subType ASC")
+    fun getDistinctSubTypes(type: OtherEntryType): Flow<List<String>>
 }

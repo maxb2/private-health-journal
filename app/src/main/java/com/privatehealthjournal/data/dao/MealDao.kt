@@ -54,6 +54,9 @@ interface MealDao {
     @Query("SELECT * FROM tags ORDER BY name ASC")
     fun getAllTags(): Flow<List<Tag>>
 
+    @Query("SELECT DISTINCT name FROM food_items ORDER BY name ASC")
+    fun getAllFoodNames(): Flow<List<String>>
+
     @Insert
     suspend fun insertMealTagCrossRef(crossRef: MealTagCrossRef)
 
