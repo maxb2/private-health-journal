@@ -57,10 +57,8 @@ data class PeriodGroup(
 ) {
     val durationDays: Int = ChronoUnit.DAYS.between(start, end).toInt() + 1
     val dominantFlow: FlowIntensity = entries
-        .groupingBy { it.flow }
-        .eachCount()
-        .maxByOrNull { it.value }
-        ?.key ?: FlowIntensity.MEDIUM
+        .maxOfOrNull { it.flow.ordinal }
+        ?.let { FlowIntensity.entries[it] } ?: FlowIntensity.MEDIUM
     val allSymptoms: Set<CycleSymptom> = entries
         .flatMap { CycleSymptom.decode(it.symptoms) }
         .toSet()
