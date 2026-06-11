@@ -12,6 +12,7 @@ import com.privatehealthjournal.data.dao.OtherEntryDao
 import com.privatehealthjournal.data.dao.BloodGlucoseDao
 import com.privatehealthjournal.data.dao.SpO2Dao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
+import com.privatehealthjournal.data.dao.CycleEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.repository.LogRepository
@@ -41,6 +42,7 @@ class LogRepositoryTest {
     private lateinit var medicationSetDao: MedicationSetDao
     private lateinit var medicationSetReminderDao: MedicationSetReminderDao
     private lateinit var medicationSetLogDao: MedicationSetLogDao
+    private lateinit var cycleEntryDao: CycleEntryDao
     private lateinit var repository: LogRepository
 
     @Before
@@ -58,6 +60,8 @@ class LogRepositoryTest {
         medicationSetDao = mockk(relaxed = true)
         medicationSetReminderDao = mockk(relaxed = true)
         medicationSetLogDao = mockk(relaxed = true)
+        cycleEntryDao = mockk(relaxed = true)
+        every { cycleEntryDao.getAllCycleEntries() } returns flowOf(emptyList())
 
         every { mealDao.getAllMealsWithDetails() } returns flowOf(emptyList())
         every { mealDao.getAllTags() } returns flowOf(emptyList())
@@ -87,7 +91,8 @@ class LogRepositoryTest {
             bloodGlucoseDao,
             medicationSetDao,
             medicationSetReminderDao,
-            medicationSetLogDao
+            medicationSetLogDao,
+            cycleEntryDao
         )
     }
 
