@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.DaysOfWeek
 import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
+import com.privatehealthjournal.ui.components.DeleteConfirmationDialog
 import com.privatehealthjournal.ui.components.ReminderEditDialog
 import com.privatehealthjournal.viewmodel.LogViewModel
 import kotlinx.coroutines.launch
@@ -171,8 +172,16 @@ private fun MedicationSetCard(
     onUpdateReminder: (MedicationSetReminder) -> Unit,
     onDeleteReminder: (MedicationSetReminder) -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     var showAddReminderDialog by remember { mutableStateOf(false) }
     var editingReminder by remember { mutableStateOf<MedicationSetReminder?>(null) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -209,7 +218,7 @@ private fun MedicationSetCard(
                         tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
                     )
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
@@ -322,6 +331,15 @@ private fun ReminderRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -359,7 +377,7 @@ private fun ReminderRow(
                 tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
             )
         }
-        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+        IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(32.dp)) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete reminder",

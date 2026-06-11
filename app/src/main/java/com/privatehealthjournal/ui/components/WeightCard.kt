@@ -19,6 +19,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +40,15 @@ fun WeightCard(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -97,7 +110,7 @@ fun WeightCard(
                         )
                     }
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
