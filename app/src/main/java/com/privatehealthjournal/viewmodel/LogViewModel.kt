@@ -22,6 +22,7 @@ import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.GlucoseMealContext
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.SpO2Entry
@@ -29,7 +30,9 @@ import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
+import com.privatehealthjournal.data.preferences.AppPreferences
 import com.privatehealthjournal.data.preferences.BudgetPreferences
+import com.privatehealthjournal.data.preferences.appDataStore
 import com.privatehealthjournal.data.repository.LogRepository
 import com.privatehealthjournal.notification.ReminderScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,6 +79,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val moodDescriptions: StateFlow<List<String>>
     val otherCategories: StateFlow<List<String>>
     val dailyBudget: StateFlow<Int?>
+    val allCycleEntries: StateFlow<List<CycleEntry>>
+    val recentCycleEntries: StateFlow<List<CycleEntry>>
+    val showCycleTracking: StateFlow<Boolean>
 
     init {
         val database = AppDatabase.getDatabase(application)
@@ -92,7 +98,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.bloodGlucoseDao(),
             database.medicationSetDao(),
             database.medicationSetReminderDao(),
-            database.medicationSetLogDao()
+            database.medicationSetLogDao(),
+            database.cycleEntryDao()
         )
 
         allMeals = repository.allMeals
@@ -194,6 +201,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         dailyBudget = BudgetPreferences.getDailyBudget(application)
             .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+        allCycleEntries = repository.allCycleEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentCycleEntries = repository.getRecentCycleEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        showCycleTracking = AppPreferences.getShowCycleTracking(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, true)
     }
 
     fun addMeal(
@@ -217,6 +233,24 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 BudgetPreferences.setDailyBudget(getApplication(), budget)
             }
         }
+    }
+
+    fun setShowCycleTracking(show: Boolean) {
+        viewModelScope.launch {
+            AppPreferences.setShowCycleTracking(getApplication(), show)
+        }
+    }
+
+    fun addCycleEntry(entry: CycleEntry) {
+        viewModelScope.launch { repository.insertCycleEntry(entry) }
+    }
+
+    fun updateCycleEntry(entry: CycleEntry) {
+        viewModelScope.launch { repository.updateCycleEntry(entry) }
+    }
+
+    fun deleteCycleEntry(entry: CycleEntry) {
+        viewModelScope.launch { repository.deleteCycleEntry(entry) }
     }
 
     fun addSymptom(
@@ -540,6 +574,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _editingMedicationSet = MutableStateFlow<MedicationSetWithItems?>(null)
     val editingMedicationSet: StateFlow<MedicationSetWithItems?> = _editingMedicationSet.asStateFlow()
 
+    private val _editingCycleEntry = MutableStateFlow<CycleEntry?>(null)
+    val editingCycleEntry: StateFlow<CycleEntry?> = _editingCycleEntry.asStateFlow()
+
     fun loadSymptomForEditing(id: Long) {
         viewModelScope.launch {
             _editingSymptom.value = repository.getSymptomById(id)
@@ -606,6 +643,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadCycleEntryForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingCycleEntry.value = repository.getCycleEntryById(id)
+        }
+    }
+
     fun clearEditingState() {
         _editingSymptom.value = null
         _editingBowelMovement.value = null
@@ -618,6 +661,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         _editingSpO2.value = null
         _editingBloodGlucose.value = null
         _editingMedicationSet.value = null
+        _editingCycleEntry.value = null
     }
 
     // Medication Set methods
@@ -702,7 +746,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     weightEntries = allWeightEntries.value,
                     spO2Entries = allSpO2Entries.value,
                     bloodGlucoseEntries = allBloodGlucoseEntries.value,
-                    medicationSets = allMedicationSets.value
+                    medicationSets = allMedicationSets.value,
+                    cycleEntries = allCycleEntries.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())

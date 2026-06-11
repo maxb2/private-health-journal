@@ -3,6 +3,7 @@ package com.privatehealthjournal.data.export
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
@@ -26,7 +27,8 @@ object DataExporter {
         weightEntries: List<WeightEntry> = emptyList(),
         spO2Entries: List<SpO2Entry> = emptyList(),
         bloodGlucoseEntries: List<BloodGlucoseEntry> = emptyList(),
-        medicationSets: List<MedicationSetWithItems> = emptyList()
+        medicationSets: List<MedicationSetWithItems> = emptyList(),
+        cycleEntries: List<CycleEntry> = emptyList()
     ): String {
         val exportData = ExportData(
             meals = meals.map { meal ->
@@ -119,6 +121,14 @@ object DataExporter {
                             dosage = item.dosage
                         )
                     }
+                )
+            },
+            cycleEntries = cycleEntries.map { entry ->
+                ExportedCycleEntry(
+                    flow = entry.flow.name,
+                    symptoms = entry.symptoms,
+                    notes = entry.notes,
+                    timestamp = entry.timestamp
                 )
             }
         )

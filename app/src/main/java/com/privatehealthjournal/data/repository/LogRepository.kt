@@ -4,6 +4,7 @@ import com.privatehealthjournal.data.dao.BloodGlucoseDao
 import com.privatehealthjournal.data.dao.BloodPressureDao
 import com.privatehealthjournal.data.dao.BowelMovementDao
 import com.privatehealthjournal.data.dao.CholesterolDao
+import com.privatehealthjournal.data.dao.CycleEntryDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.MedicationSetDao
@@ -17,6 +18,7 @@ import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.BowelMovementEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
@@ -46,7 +48,8 @@ class LogRepository(
     private val bloodGlucoseDao: BloodGlucoseDao,
     private val medicationSetDao: MedicationSetDao,
     private val medicationSetReminderDao: MedicationSetReminderDao,
-    private val medicationSetLogDao: MedicationSetLogDao
+    private val medicationSetLogDao: MedicationSetLogDao,
+    private val cycleEntryDao: CycleEntryDao
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -64,6 +67,7 @@ class LogRepository(
     val allMedicationSets: Flow<List<MedicationSetWithItems>> = medicationSetDao.getAllSetsWithItems()
     val allFoodNames: Flow<List<String>> = mealDao.getAllFoodNames()
     val allSymptomNames: Flow<List<String>> = symptomEntryDao.getAllSymptomNames()
+    val allCycleEntries: Flow<List<CycleEntry>> = cycleEntryDao.getAllCycleEntries()
     fun getDistinctOtherSubTypes(type: OtherEntryType): Flow<List<String>> =
         otherEntryDao.getDistinctSubTypes(type)
 
@@ -105,6 +109,10 @@ class LogRepository(
 
     fun getRecentBloodGlucoseEntries(limit: Int = 5): Flow<List<BloodGlucoseEntry>> {
         return bloodGlucoseDao.getRecentBloodGlucoseEntries(limit)
+    }
+
+    fun getRecentCycleEntries(limit: Int = 5): Flow<List<CycleEntry>> {
+        return cycleEntryDao.getRecentCycleEntries(limit)
     }
 
     suspend fun insertMeal(
@@ -349,6 +357,12 @@ class LogRepository(
     // Medication Set Log methods
     suspend fun insertMedicationSetLog(log: MedicationSetLog): Long =
         medicationSetLogDao.insert(log)
+
+    // Cycle Entry methods
+    suspend fun insertCycleEntry(entry: CycleEntry): Long = cycleEntryDao.insert(entry)
+    suspend fun updateCycleEntry(entry: CycleEntry) = cycleEntryDao.update(entry)
+    suspend fun deleteCycleEntry(entry: CycleEntry) = cycleEntryDao.delete(entry)
+    suspend fun getCycleEntryById(id: Long): CycleEntry? = cycleEntryDao.getById(id)
 
     suspend fun hasSetBeenLoggedToday(setId: Long): Boolean {
         val calendar = java.util.Calendar.getInstance()

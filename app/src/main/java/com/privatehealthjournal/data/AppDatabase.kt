@@ -10,6 +10,7 @@ import com.privatehealthjournal.data.dao.BloodGlucoseDao
 import com.privatehealthjournal.data.dao.BloodPressureDao
 import com.privatehealthjournal.data.dao.BowelMovementDao
 import com.privatehealthjournal.data.dao.CholesterolDao
+import com.privatehealthjournal.data.dao.CycleEntryDao
 import com.privatehealthjournal.data.dao.MealDao
 import com.privatehealthjournal.data.dao.MedicationDao
 import com.privatehealthjournal.data.dao.MedicationSetDao
@@ -23,6 +24,7 @@ import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.BowelMovementEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.FoodItem
 import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealTagCrossRef
@@ -55,9 +57,10 @@ import com.privatehealthjournal.data.entity.WeightEntry
         MedicationSet::class,
         MedicationSetItem::class,
         MedicationSetReminder::class,
-        MedicationSetLog::class
+        MedicationSetLog::class,
+        CycleEntry::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -74,6 +77,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun medicationSetDao(): MedicationSetDao
     abstract fun medicationSetReminderDao(): MedicationSetReminderDao
     abstract fun medicationSetLogDao(): MedicationSetLogDao
+    abstract fun cycleEntryDao(): CycleEntryDao
 
     companion object {
         @Volatile
@@ -148,6 +152,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `cycle_entries` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `flow` TEXT NOT NULL,
+                        `symptoms` TEXT NOT NULL,
+                        `notes` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -155,7 +173,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "food_symptom_log_database"
                 )
-                    .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                    .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -51,8 +52,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
@@ -63,6 +66,7 @@ import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
 import com.privatehealthjournal.ui.components.BloodPressureCard
 import com.privatehealthjournal.ui.components.CholesterolCard
+import com.privatehealthjournal.ui.components.CycleEntryCard
 import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
@@ -102,7 +106,9 @@ fun HomeScreen(
     onEditSpO2: (Long) -> Unit = {},
     onEditBloodGlucose: (Long) -> Unit = {},
     onViewMedicationSets: () -> Unit = {},
-    onViewMealBudget: () -> Unit = {}
+    onViewMealBudget: () -> Unit = {},
+    onViewCycleTracking: () -> Unit = {},
+    onEditCycleEntry: (Long) -> Unit = {}
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
@@ -113,6 +119,8 @@ fun HomeScreen(
     val recentWeight by viewModel.recentWeightEntries.collectAsState()
     val recentSpO2 by viewModel.recentSpO2Entries.collectAsState()
     val recentBloodGlucose by viewModel.recentBloodGlucoseEntries.collectAsState()
+    val recentCycleEntries by viewModel.recentCycleEntries.collectAsState()
+    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
 
     var medsMenuExpanded by remember { mutableStateOf(false) }
     var biometricsMenuExpanded by remember { mutableStateOf(false) }
@@ -398,6 +406,24 @@ fun HomeScreen(
                         )
                     }
                 }
+
+                // Cycle tracking button (hidden when showCycleTracking is false)
+                if (showCycleTracking) {
+                    Button(
+                        onClick = { onViewCycleTracking() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE91E63)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Cycle")
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -414,7 +440,8 @@ fun HomeScreen(
                 recentMedications.isEmpty() && recentOtherEntries.isEmpty() &&
                 recentBloodPressure.isEmpty() && recentCholesterol.isEmpty() &&
                 recentWeight.isEmpty() && recentSpO2.isEmpty() &&
-                recentBloodGlucose.isEmpty()
+                recentBloodGlucose.isEmpty() &&
+                (!showCycleTracking || recentCycleEntries.isEmpty())
 
             if (allEmpty) {
                 Column(
@@ -450,7 +477,8 @@ fun HomeScreen(
                     recentCholesterol.map { EntryItem.Cholesterol(it) } +
                     recentWeight.map { EntryItem.Weight(it) } +
                     recentSpO2.map { EntryItem.SpO2(it) } +
-                    recentBloodGlucose.map { EntryItem.BloodGlucose(it) }
+                    recentBloodGlucose.map { EntryItem.BloodGlucose(it) } +
+                    (if (showCycleTracking) recentCycleEntries.map { EntryItem.Cycle(it) } else emptyList())
                 )
                     .sortedByDescending { it.timestamp }
                     .take(10)
@@ -547,6 +575,11 @@ fun HomeScreen(
                                     onDelete = { viewModel.deleteBloodGlucose(item.entry) },
                                     onEdit = { onEditBloodGlucose(item.entry.id) }
                                 )
+                                is EntryItem.Cycle -> CycleEntryCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteCycleEntry(item.entry) },
+                                    onEdit = { onEditCycleEntry(item.entry.id) }
+                                )
                             }
                         }
                     }
@@ -584,6 +617,9 @@ private sealed class EntryItem {
         override val timestamp: Long = entry.timestamp
     }
     data class BloodGlucose(val entry: BloodGlucoseEntry) : EntryItem() {
+        override val timestamp: Long = entry.timestamp
+    }
+    data class Cycle(val entry: CycleEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
     }
 }
