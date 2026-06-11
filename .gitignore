@@ -1,3 +1,7 @@
+*.zip
+*.png
+screenshots/
+
 # Built application files
 *.apk
 *.ap_
