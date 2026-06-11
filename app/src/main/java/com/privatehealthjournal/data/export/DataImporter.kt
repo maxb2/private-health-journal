@@ -3,6 +3,8 @@ package com.privatehealthjournal.data.export
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
+import com.privatehealthjournal.data.entity.FlowIntensity
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
@@ -35,6 +37,7 @@ object DataImporter {
             var spO2Imported = 0
             var bloodGlucoseImported = 0
             var medicationSetsImported = 0
+            var cycleEntriesImported = 0
 
             // Import meals
             exportData.meals.forEach { meal ->
@@ -194,6 +197,24 @@ object DataImporter {
                 medicationSetsImported++
             }
 
+            // Import cycle entries
+            exportData.cycleEntries.forEach { entry ->
+                val flow = try {
+                    FlowIntensity.valueOf(entry.flow)
+                } catch (e: IllegalArgumentException) {
+                    FlowIntensity.MEDIUM
+                }
+                repository.insertCycleEntry(
+                    CycleEntry(
+                        flow = flow,
+                        symptoms = entry.symptoms,
+                        notes = entry.notes,
+                        timestamp = entry.timestamp
+                    )
+                )
+                cycleEntriesImported++
+            }
+
             ImportResult.Success(
                 mealsImported = mealsImported,
                 symptomsImported = symptomsImported,
@@ -204,7 +225,8 @@ object DataImporter {
                 weightImported = weightImported,
                 spO2Imported = spO2Imported,
                 bloodGlucoseImported = bloodGlucoseImported,
-                medicationSetsImported = medicationSetsImported
+                medicationSetsImported = medicationSetsImported,
+                cycleEntriesImported = cycleEntriesImported
             )
         } catch (e: Exception) {
             ImportResult.Error("Failed to import: ${e.message}")
@@ -223,12 +245,13 @@ sealed class ImportResult {
         val weightImported: Int = 0,
         val spO2Imported: Int = 0,
         val bloodGlucoseImported: Int = 0,
-        val medicationSetsImported: Int = 0
+        val medicationSetsImported: Int = 0,
+        val cycleEntriesImported: Int = 0
     ) : ImportResult() {
         val totalImported: Int
             get() = mealsImported + symptomsImported + medicationsImported + otherEntriesImported +
                     bloodPressureImported + cholesterolImported + weightImported + spO2Imported +
-                    bloodGlucoseImported + medicationSetsImported
+                    bloodGlucoseImported + medicationSetsImported + cycleEntriesImported
     }
 
     data class Error(val message: String) : ImportResult()

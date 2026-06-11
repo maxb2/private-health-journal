@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
@@ -44,6 +45,7 @@ import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
 import com.privatehealthjournal.ui.components.BloodPressureCard
 import com.privatehealthjournal.ui.components.CholesterolCard
+import com.privatehealthjournal.ui.components.CycleEntryCard
 import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
@@ -57,7 +59,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 enum class FilterType {
-    ALL, MEALS, SYMPTOMS, OTHER, MEDICATIONS, BIOMETRICS
+    ALL, MEALS, SYMPTOMS, OTHER, MEDICATIONS, BIOMETRICS, CYCLE
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +75,8 @@ fun HistoryScreen(
     onEditCholesterol: (Long) -> Unit = {},
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
-    onEditBloodGlucose: (Long) -> Unit = {}
+    onEditBloodGlucose: (Long) -> Unit = {},
+    onEditCycleEntry: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -84,6 +87,8 @@ fun HistoryScreen(
     val allWeight by viewModel.allWeightEntries.collectAsState()
     val allSpO2 by viewModel.allSpO2Entries.collectAsState()
     val allBloodGlucose by viewModel.allBloodGlucoseEntries.collectAsState()
+    val allCycleEntries by viewModel.allCycleEntries.collectAsState()
+    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
     var filterType by remember { mutableStateOf(FilterType.ALL) }
 
     Scaffold(
@@ -151,6 +156,13 @@ fun HistoryScreen(
                     onClick = { filterType = FilterType.BIOMETRICS },
                     label = { Text("Biometrics") }
                 )
+                if (showCycleTracking) {
+                    FilterChip(
+                        selected = filterType == FilterType.CYCLE,
+                        onClick = { filterType = FilterType.CYCLE },
+                        label = { Text("Cycle") }
+                    )
+                }
             }
 
             val filteredEntries = when (filterType) {
@@ -163,7 +175,8 @@ fun HistoryScreen(
                             allCholesterol.map { HistoryEntry.Cholesterol(it) } +
                             allWeight.map { HistoryEntry.Weight(it) } +
                             allSpO2.map { HistoryEntry.SpO2(it) } +
-                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) })
+                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
+                            (if (showCycleTracking) allCycleEntries.map { HistoryEntry.Cycle(it) } else emptyList()))
                         .sortedByDescending { it.timestamp }
                 }
                 FilterType.MEALS -> allMeals.map { HistoryEntry.Meal(it) }
@@ -182,6 +195,8 @@ fun HistoryScreen(
                             allBloodGlucose.map { HistoryEntry.BloodGlucose(it) })
                         .sortedByDescending { it.timestamp }
                 }
+                FilterType.CYCLE -> allCycleEntries.map { HistoryEntry.Cycle(it) }
+                    .sortedByDescending { it.timestamp }
             }
 
             if (filteredEntries.isEmpty()) {
@@ -291,6 +306,11 @@ fun HistoryScreen(
                                     onDelete = { viewModel.deleteBloodGlucose(entry.entry) },
                                     onEdit = { onEditBloodGlucose(entry.entry.id) }
                                 )
+                                is HistoryEntry.Cycle -> CycleEntryCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteCycleEntry(entry.entry) },
+                                    onEdit = { onEditCycleEntry(entry.entry.id) }
+                                )
                             }
                         }
                     }
@@ -336,6 +356,10 @@ private sealed class HistoryEntry {
     }
 
     data class BloodGlucose(val entry: BloodGlucoseEntry) : HistoryEntry() {
+        override val timestamp: Long = entry.timestamp
+    }
+
+    data class Cycle(val entry: CycleEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
     }
 }

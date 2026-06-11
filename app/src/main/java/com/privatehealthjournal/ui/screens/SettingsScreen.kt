@@ -3,7 +3,9 @@ package com.privatehealthjournal.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -61,6 +64,7 @@ fun SettingsScreen(
     val allMedications by viewModel.allMedications.collectAsState()
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
+    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
 
     var budgetText by remember { mutableStateOf("") }
 
@@ -199,6 +203,47 @@ fun SettingsScreen(
                 enabled = budgetText.toIntOrNull() != null || (budgetText.isEmpty() && dailyBudget != null)
             ) {
                 Text(if (budgetText.isEmpty() && dailyBudget != null) "Clear Budget" else "Save Budget")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Display",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Cycle Tracking",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "Show cycle/period tracking features",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = showCycleTracking,
+                        onCheckedChange = { viewModel.setShowCycleTracking(it) }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

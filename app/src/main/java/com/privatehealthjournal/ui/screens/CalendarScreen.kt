@@ -40,8 +40,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
+import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
@@ -52,6 +54,7 @@ import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
 import com.privatehealthjournal.ui.components.BloodPressureCard
 import com.privatehealthjournal.ui.components.CholesterolCard
+import com.privatehealthjournal.ui.components.CycleEntryCard
 import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
@@ -80,7 +83,8 @@ fun CalendarScreen(
     onEditCholesterol: (Long) -> Unit = {},
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
-    onEditBloodGlucose: (Long) -> Unit = {}
+    onEditBloodGlucose: (Long) -> Unit = {},
+    onEditCycleEntry: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -91,6 +95,8 @@ fun CalendarScreen(
     val allWeight by viewModel.allWeightEntries.collectAsState()
     val allSpO2 by viewModel.allSpO2Entries.collectAsState()
     val allBloodGlucose by viewModel.allBloodGlucoseEntries.collectAsState()
+    val allCycleEntries by viewModel.allCycleEntries.collectAsState()
+    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
 
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -98,7 +104,7 @@ fun CalendarScreen(
     val zone = ZoneId.systemDefault()
 
     // Group entries by date
-    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight, allSpO2, allBloodGlucose) {
+    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight, allSpO2, allBloodGlucose, allCycleEntries, showCycleTracking) {
         val map = mutableMapOf<LocalDate, MutableList<CalendarEntry>>()
 
         allMeals.forEach { meal ->
@@ -137,8 +143,19 @@ fun CalendarScreen(
             val date = Instant.ofEpochMilli(bg.timestamp).atZone(zone).toLocalDate()
             map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.BloodGlucose(bg))
         }
+        if (showCycleTracking) {
+            allCycleEntries.forEach { cycle ->
+                val date = Instant.ofEpochMilli(cycle.timestamp).atZone(zone).toLocalDate()
+                map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Cycle(cycle))
+            }
+        }
 
         map
+    }
+
+    val cycleDates = remember(allCycleEntries, showCycleTracking) {
+        if (!showCycleTracking) emptySet()
+        else allCycleEntries.map { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }.toSet()
     }
 
     val selectedEntries = entriesByDate[selectedDate]
@@ -153,6 +170,7 @@ fun CalendarScreen(
                 is CalendarEntry.Weight -> it.entry.timestamp
                 is CalendarEntry.SpO2 -> it.entry.timestamp
                 is CalendarEntry.BloodGlucose -> it.entry.timestamp
+                is CalendarEntry.Cycle -> it.entry.timestamp
             }
         }
         ?: emptyList()
@@ -205,6 +223,7 @@ fun CalendarScreen(
                 yearMonth = currentMonth,
                 selectedDate = selectedDate,
                 datesWithEntries = entriesByDate.keys,
+                cycleDates = cycleDates,
                 onDateSelected = { selectedDate = it }
             )
 
@@ -281,6 +300,11 @@ fun CalendarScreen(
                                 onDelete = { viewModel.deleteBloodGlucose(entry.entry) },
                                 onEdit = { onEditBloodGlucose(entry.entry.id) }
                             )
+                            is CalendarEntry.Cycle -> CycleEntryCard(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteCycleEntry(entry.entry) },
+                                onEdit = { onEditCycleEntry(entry.entry.id) }
+                            )
                         }
                     }
                 }
@@ -345,6 +369,7 @@ private fun CalendarGrid(
     yearMonth: YearMonth,
     selectedDate: LocalDate,
     datesWithEntries: Set<LocalDate>,
+    cycleDates: Set<LocalDate> = emptySet(),
     onDateSelected: (LocalDate) -> Unit
 ) {
     val firstOfMonth = yearMonth.atDay(1)
@@ -363,6 +388,7 @@ private fun CalendarGrid(
                         val date = yearMonth.atDay(dayIndex)
                         val isSelected = date == selectedDate
                         val hasEntries = date in datesWithEntries
+                        val hasCycleEntry = date in cycleDates
                         val isToday = date == LocalDate.now()
 
                         CalendarDayCell(
@@ -370,6 +396,7 @@ private fun CalendarGrid(
                             isSelected = isSelected,
                             isToday = isToday,
                             hasEntries = hasEntries,
+                            hasCycleEntry = hasCycleEntry,
                             onClick = { onDateSelected(date) },
                             modifier = Modifier.weight(1f)
                         )
@@ -388,6 +415,7 @@ private fun CalendarDayCell(
     isSelected: Boolean,
     isToday: Boolean,
     hasEntries: Boolean,
+    hasCycleEntry: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -430,6 +458,17 @@ private fun CalendarDayCell(
                         )
                 )
             }
+            if (hasCycleEntry) {
+                Box(
+                    modifier = Modifier
+                        .size(4.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.onPrimary
+                            else Color(0xFFE91E63)
+                        )
+                )
+            }
         }
     }
 }
@@ -444,4 +483,5 @@ private sealed class CalendarEntry {
     data class Weight(val entry: WeightEntry) : CalendarEntry()
     data class SpO2(val entry: SpO2Entry) : CalendarEntry()
     data class BloodGlucose(val entry: BloodGlucoseEntry) : CalendarEntry()
+    data class Cycle(val entry: CycleEntry) : CalendarEntry()
 }
