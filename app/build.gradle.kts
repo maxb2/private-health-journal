@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.privatehealthjournal"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.privatehealthjournal"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -68,7 +68,7 @@ dependencies {
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
-    implementation("androidx.activity:activity-compose:1.8.1")
+    implementation("androidx.activity:activity-compose:1.13.0")
 
     // Compose
     implementation(platform("androidx.compose:compose-bom:2026.05.01"))
