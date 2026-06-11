@@ -34,6 +34,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,6 +61,15 @@ fun MealEntryCard(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -142,7 +155,7 @@ fun MealEntryCard(
                         )
                     }
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
@@ -165,6 +178,15 @@ fun SymptomEntryCard(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -224,7 +246,7 @@ fun SymptomEntryCard(
                         )
                     }
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
@@ -243,6 +265,15 @@ fun BowelMovementCard(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     val bristolType = BristolType.fromInt(entry.bristolType)
 
     Card(
@@ -312,7 +343,7 @@ fun BowelMovementCard(
                         )
                     }
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
@@ -331,6 +362,15 @@ fun OtherEntryCard(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        DeleteConfirmationDialog(
+            onConfirm = { onDelete(); showDeleteConfirm = false },
+            onDismiss = { showDeleteConfirm = false }
+        )
+    }
+
     val icon = when (entry.entryType) {
         OtherEntryType.BOWEL_MOVEMENT -> Icons.Default.WaterDrop
         OtherEntryType.SLEEP -> Icons.Default.Bedtime
@@ -470,7 +510,7 @@ fun OtherEntryCard(
                         )
                     }
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
