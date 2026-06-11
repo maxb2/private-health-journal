@@ -29,6 +29,7 @@ import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
+import com.privatehealthjournal.data.preferences.BudgetPreferences
 import com.privatehealthjournal.data.repository.LogRepository
 import com.privatehealthjournal.notification.ReminderScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +75,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val stressSources: StateFlow<List<String>>
     val moodDescriptions: StateFlow<List<String>>
     val otherCategories: StateFlow<List<String>>
+    val dailyBudget: StateFlow<Int?>
 
     init {
         val database = AppDatabase.getDatabase(application)
@@ -189,6 +191,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         otherCategories = repository.getDistinctOtherSubTypes(OtherEntryType.OTHER)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        dailyBudget = BudgetPreferences.getDailyBudget(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
     fun addMeal(
@@ -196,10 +201,21 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         foods: List<String>,
         tags: List<String>,
         notes: String = "",
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
+        pointCost: Int? = null
     ) {
         viewModelScope.launch {
-            repository.insertMeal(mealType, foods, tags, notes, timestamp)
+            repository.insertMeal(mealType, foods, tags, notes, timestamp, pointCost)
+        }
+    }
+
+    fun saveDailyBudget(budget: Int?) {
+        viewModelScope.launch {
+            if (budget == null) {
+                BudgetPreferences.clearDailyBudget(getApplication())
+            } else {
+                BudgetPreferences.setDailyBudget(getApplication(), budget)
+            }
         }
     }
 

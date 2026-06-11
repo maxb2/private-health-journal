@@ -112,9 +112,10 @@ class LogRepository(
         foods: List<String>,
         tags: List<String>,
         notes: String = "",
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
+        pointCost: Int? = null
     ): Long {
-        val meal = MealEntry(mealType = mealType, notes = notes, timestamp = timestamp)
+        val meal = MealEntry(mealType = mealType, notes = notes, timestamp = timestamp, pointCost = pointCost)
         return mealDao.insertMealWithDetails(meal, foods, tags)
     }
 

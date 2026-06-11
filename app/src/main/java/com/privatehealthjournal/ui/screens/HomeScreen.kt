@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Warning
@@ -100,7 +101,8 @@ fun HomeScreen(
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
     onEditBloodGlucose: (Long) -> Unit = {},
-    onViewMedicationSets: () -> Unit = {}
+    onViewMedicationSets: () -> Unit = {},
+    onViewMealBudget: () -> Unit = {}
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
@@ -126,6 +128,12 @@ fun HomeScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = onViewMealBudget) {
+                        Icon(
+                            imageVector = Icons.Default.Savings,
+                            contentDescription = "Meal Budget"
+                        )
+                    }
                     IconButton(onClick = onViewCalendar) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,

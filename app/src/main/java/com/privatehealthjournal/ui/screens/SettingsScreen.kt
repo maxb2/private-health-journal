@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileDownload
@@ -23,15 +27,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.viewmodel.LogViewModel
 import java.text.SimpleDateFormat
@@ -49,6 +60,13 @@ fun SettingsScreen(
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
     val allMedications by viewModel.allMedications.collectAsState()
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
+    val dailyBudget by viewModel.dailyBudget.collectAsState()
+
+    var budgetText by remember { mutableStateOf("") }
+
+    LaunchedEffect(dailyBudget) {
+        budgetText = dailyBudget?.toString() ?: ""
+    }
 
     val totalEntries = allMeals.size + allSymptoms.size + allMedications.size + allOtherEntries.size
 
@@ -100,6 +118,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Data summary
             Card(
@@ -125,6 +144,61 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Meal Budget settings
+            Text(
+                text = "Meal Budget",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Set your daily point budget. A weekly overage of one extra day's budget is included for flexibility.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = budgetText,
+                onValueChange = { newVal ->
+                    if (newVal.isEmpty() || newVal.all { it.isDigit() }) {
+                        budgetText = newVal
+                    }
+                },
+                label = { Text("Daily Point Budget") },
+                placeholder = { Text("e.g., 30") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { viewModel.saveDailyBudget(budgetText.toIntOrNull()) }
+                ),
+                supportingText = if (budgetText.isNotBlank()) {
+                    val daily = budgetText.toIntOrNull()
+                    if (daily != null) {
+                        { Text("Weekly total: ${daily * 8} pts (${daily * 7} + ${daily} overage)") }
+                    } else null
+                } else null
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { viewModel.saveDailyBudget(budgetText.toIntOrNull()) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = budgetText.toIntOrNull() != null || (budgetText.isEmpty() && dailyBudget != null)
+            ) {
+                Text(if (budgetText.isEmpty() && dailyBudget != null) "Clear Budget" else "Save Budget")
             }
 
             Spacer(modifier = Modifier.height(24.dp))

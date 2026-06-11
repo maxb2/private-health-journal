@@ -48,7 +48,8 @@ object DataImporter {
                     foods = meal.foods,
                     tags = meal.tags,
                     notes = meal.notes,
-                    timestamp = meal.timestamp
+                    timestamp = meal.timestamp,
+                    pointCost = meal.pointCost
                 )
                 mealsImported++
             }
@@ -93,7 +94,8 @@ object DataImporter {
                         subType = other.subType,
                         value = other.value,
                         notes = other.notes,
-                        timestamp = other.timestamp
+                        timestamp = other.timestamp,
+                        pointCredit = other.pointCredit
                     )
                 )
                 otherEntriesImported++
