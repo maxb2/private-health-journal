@@ -21,5 +21,6 @@ data class OtherEntry(
     val subType: String = "",
     val value: String = "",
     val notes: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val pointCredit: Int? = null
 )

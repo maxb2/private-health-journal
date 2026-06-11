@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.privatehealthjournal.data.dao.BloodGlucoseDao
 import com.privatehealthjournal.data.dao.BloodPressureDao
 import com.privatehealthjournal.data.dao.BowelMovementDao
@@ -55,7 +57,7 @@ import com.privatehealthjournal.data.entity.WeightEntry
         MedicationSetReminder::class,
         MedicationSetLog::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -77,6 +79,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE meal_entries ADD COLUMN pointCost INTEGER")
+                database.execSQL("ALTER TABLE other_entries ADD COLUMN pointCredit INTEGER")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -84,7 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "food_symptom_log_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_11_12)
                     .build()
                 INSTANCE = instance
                 instance

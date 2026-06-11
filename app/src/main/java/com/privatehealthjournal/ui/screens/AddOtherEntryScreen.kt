@@ -79,6 +79,7 @@ fun AddOtherEntryScreen(
     var subType by remember { mutableStateOf("") }
     var value by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var pointCreditText by remember { mutableStateOf("") }
     var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by remember { mutableStateOf<Long?>(null) }
 
@@ -99,6 +100,7 @@ fun AddOtherEntryScreen(
             subType = entry.subType
             value = entry.value
             notes = entry.notes
+            pointCreditText = entry.pointCredit?.toString() ?: ""
             timestamp = entry.timestamp
             existingId = entry.id
             if (entry.entryType == OtherEntryType.BOWEL_MOVEMENT) {
@@ -200,6 +202,20 @@ fun AddOtherEntryScreen(
                         placeholder = { Text("e.g., 30 minutes") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = pointCreditText,
+                        onValueChange = { newVal ->
+                            if (newVal.isEmpty() || newVal.all { it.isDigit() }) {
+                                pointCreditText = newVal
+                            }
+                        },
+                        label = { Text("Point Credit (optional)") },
+                        placeholder = { Text("Points earned back") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
                 OtherEntryType.STRESS -> {
@@ -322,6 +338,9 @@ fun AddOtherEntryScreen(
                     } else {
                         value.trim()
                     }
+                    val pointCredit = if (selectedType == OtherEntryType.EXERCISE) {
+                        pointCreditText.toIntOrNull()
+                    } else null
 
                     val entry = OtherEntry(
                         id = if (isEditMode) existingId ?: 0 else 0,
@@ -329,7 +348,8 @@ fun AddOtherEntryScreen(
                         subType = subType.trim(),
                         value = finalValue,
                         notes = notes.trim(),
-                        timestamp = timestamp
+                        timestamp = timestamp,
+                        pointCredit = pointCredit
                     )
 
                     if (isEditMode && existingId != null) {

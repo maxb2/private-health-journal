@@ -20,7 +20,8 @@ data class ExportedMeal(
     val notes: String,
     val timestamp: Long,
     val foods: List<String>,
-    val tags: List<String>
+    val tags: List<String>,
+    val pointCost: Int? = null
 )
 
 data class ExportedSymptom(
@@ -43,7 +44,8 @@ data class ExportedOtherEntry(
     val subType: String,
     val value: String,
     val notes: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val pointCredit: Int? = null
 )
 
 data class ExportedBloodPressure(

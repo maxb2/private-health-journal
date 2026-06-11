@@ -16,5 +16,6 @@ data class MealEntry(
     val id: Long = 0,
     val mealType: MealType,
     val notes: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val pointCost: Int? = null
 )

@@ -49,6 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealType
@@ -76,6 +78,7 @@ fun AddMealScreen(
     val tags = remember { mutableStateListOf<String>() }
     var currentTag by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var pointCostText by remember { mutableStateOf("") }
     var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by remember { mutableStateOf<Long?>(null) }
 
@@ -98,6 +101,7 @@ fun AddMealScreen(
             tags.clear()
             tags.addAll(mealWithDetails.tags.map { it.name })
             notes = mealWithDetails.meal.notes
+            pointCostText = mealWithDetails.meal.pointCost?.toString() ?: ""
             timestamp = mealWithDetails.meal.timestamp
             existingId = mealWithDetails.meal.id
         }
@@ -415,18 +419,36 @@ fun AddMealScreen(
                 maxLines = 3
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = pointCostText,
+                onValueChange = { newVal ->
+                    if (newVal.isEmpty() || newVal.all { it.isDigit() }) {
+                        pointCostText = newVal
+                    }
+                },
+                label = { Text("Point Cost (optional)") },
+                placeholder = { Text("e.g., 8") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     if (foods.isNotEmpty()) {
+                        val pointCost = pointCostText.toIntOrNull()
                         if (isEditMode && existingId != null) {
                             viewModel.updateMeal(
                                 meal = MealEntry(
                                     id = existingId!!,
                                     mealType = selectedMealType,
                                     notes = notes.trim(),
-                                    timestamp = timestamp
+                                    timestamp = timestamp,
+                                    pointCost = pointCost
                                 ),
                                 foods = foods.toList(),
                                 tags = tags.toList()
@@ -437,7 +459,8 @@ fun AddMealScreen(
                                 foods = foods.toList(),
                                 tags = tags.toList(),
                                 notes = notes.trim(),
-                                timestamp = timestamp
+                                timestamp = timestamp,
+                                pointCost = pointCost
                             )
                         }
                         viewModel.clearEditingState()

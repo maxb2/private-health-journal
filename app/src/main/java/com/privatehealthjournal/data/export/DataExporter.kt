@@ -35,7 +35,8 @@ object DataExporter {
                     notes = meal.meal.notes,
                     timestamp = meal.meal.timestamp,
                     foods = meal.foods.map { it.name },
-                    tags = meal.tags.map { it.name }
+                    tags = meal.tags.map { it.name },
+                    pointCost = meal.meal.pointCost
                 )
             },
             symptoms = symptoms.map { symptom ->
@@ -61,7 +62,8 @@ object DataExporter {
                     subType = other.subType,
                     value = other.value,
                     notes = other.notes,
-                    timestamp = other.timestamp
+                    timestamp = other.timestamp,
+                    pointCredit = other.pointCredit
                 )
             },
             bloodPressureEntries = bloodPressureEntries.map { bp ->

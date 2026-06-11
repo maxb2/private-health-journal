@@ -35,6 +35,7 @@ import com.privatehealthjournal.ui.screens.BiometricsChartScreen
 import com.privatehealthjournal.ui.screens.CalendarScreen
 import com.privatehealthjournal.ui.screens.HistoryScreen
 import com.privatehealthjournal.ui.screens.HomeScreen
+import com.privatehealthjournal.ui.screens.MealBudgetScreen
 import com.privatehealthjournal.ui.screens.MedicationSetsScreen
 import com.privatehealthjournal.ui.screens.SettingsScreen
 import com.privatehealthjournal.notification.ReminderBroadcastReceiver
@@ -104,7 +105,8 @@ class MainActivity : ComponentActivity() {
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
                                 onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onViewMedicationSets = { navController.navigate("medication_sets") }
+                                onViewMedicationSets = { navController.navigate("medication_sets") },
+                                onViewMealBudget = { navController.navigate("meal_budget") }
                             )
                         }
                         composable(
@@ -201,6 +203,13 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("meal_budget") {
+                            MealBudgetScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                onNavigateToSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("biometrics_chart") {
