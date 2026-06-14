@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class OtherEntryType {
@@ -13,7 +14,7 @@ enum class OtherEntryType {
     OTHER
 }
 
-@Entity(tableName = "other_entries")
+@Entity(tableName = "other_entries", indices = [Index("timestamp")])
 data class OtherEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

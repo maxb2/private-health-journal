@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,10 +59,10 @@ fun AddBowelMovementScreen(
     val editingBowelMovement by viewModel.editingBowelMovement.collectAsState()
     val isEditMode = editId != null
 
-    var selectedType by remember { mutableIntStateOf(4) }
-    var notes by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var selectedType by rememberSaveable { mutableIntStateOf(4) }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     // Load existing entry for editing
     LaunchedEffect(editId) {

@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -50,12 +51,12 @@ fun AddBloodPressureScreen(
     val editingEntry by viewModel.editingBloodPressure.collectAsState()
     val isEditMode = editId != null
 
-    var systolic by remember { mutableStateOf("") }
-    var diastolic by remember { mutableStateOf("") }
-    var pulse by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var systolic by rememberSaveable { mutableStateOf("") }
+    var diastolic by rememberSaveable { mutableStateOf("") }
+    var pulse by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(editId) {
         if (editId != null) {

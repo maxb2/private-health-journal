@@ -485,25 +485,32 @@ fun HomeScreen(
                     )
                 }
             } else {
-                val combinedEntries = (
-                    recentMeals.map { EntryItem.Meal(it) } +
-                    recentSymptoms.map { EntryItem.Symptom(it) } +
-                    recentMedications.map { EntryItem.Medication(it) } +
-                    recentOtherEntries.map { EntryItem.Other(it) } +
-                    recentBloodPressure.map { EntryItem.BloodPressure(it) } +
-                    recentCholesterol.map { EntryItem.Cholesterol(it) } +
-                    recentWeight.map { EntryItem.Weight(it) } +
-                    recentSpO2.map { EntryItem.SpO2(it) } +
-                    recentBloodGlucose.map { EntryItem.BloodGlucose(it) } +
-                    (if (showCycleTracking) recentCycleEntries.map { EntryItem.Cycle(it) } else emptyList()) +
-                    (if (showStepCounting) recentStepCount.map { EntryItem.StepCount(it) } else emptyList())
-                )
-                    .sortedByDescending { it.timestamp }
-                    .take(10)
-
-                // Group entries by day
-                val entriesByDay = combinedEntries.groupBy { item ->
-                    Instant.ofEpochMilli(item.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+                val entriesByDay = remember(
+                    recentMeals, recentSymptoms, recentMedications, recentOtherEntries,
+                    recentBloodPressure, recentCholesterol, recentWeight, recentSpO2,
+                    recentBloodGlucose, recentCycleEntries, recentStepCount,
+                    showCycleTracking, showStepCounting
+                ) {
+                    val combined = (
+                        recentMeals.map { EntryItem.Meal(it) } +
+                        recentSymptoms.map { EntryItem.Symptom(it) } +
+                        recentMedications.map { EntryItem.Medication(it) } +
+                        recentOtherEntries.map { EntryItem.Other(it) } +
+                        recentBloodPressure.map { EntryItem.BloodPressure(it) } +
+                        recentCholesterol.map { EntryItem.Cholesterol(it) } +
+                        recentWeight.map { EntryItem.Weight(it) } +
+                        recentSpO2.map { EntryItem.SpO2(it) } +
+                        recentBloodGlucose.map { EntryItem.BloodGlucose(it) } +
+                        (if (showCycleTracking) recentCycleEntries.map { EntryItem.Cycle(it) } else emptyList()) +
+                        (if (showStepCounting) recentStepCount.map { EntryItem.StepCount(it) } else emptyList())
+                    )
+                        .sortedByDescending { it.timestamp }
+                        .take(10)
+                    combined.groupBy { item ->
+                        Instant.ofEpochMilli(item.timestamp)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
                 }
 
                 val today = LocalDate.now()
@@ -542,7 +549,10 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        items(entries) { item ->
+                        items(
+                            entries,
+                            key = { item -> "${item::class.simpleName}-${item.entryId}" }
+                        ) { item ->
                             when (item) {
                                 is EntryItem.Meal -> MealEntryCard(
                                     meal = item.entry,
@@ -614,36 +624,47 @@ fun HomeScreen(
 
 private sealed class EntryItem {
     abstract val timestamp: Long
+    abstract val entryId: Long
 
     data class Meal(val entry: MealWithDetails) : EntryItem() {
         override val timestamp: Long = entry.meal.timestamp
+        override val entryId: Long = entry.meal.id
     }
     data class Symptom(val entry: SymptomEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class Medication(val entry: MedicationEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class Other(val entry: OtherEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class BloodPressure(val entry: BloodPressureEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class Cholesterol(val entry: CholesterolEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class Weight(val entry: WeightEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class SpO2(val entry: SpO2Entry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class BloodGlucose(val entry: BloodGlucoseEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class Cycle(val entry: CycleEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
     data class StepCount(val entry: StepCountEntry) : EntryItem() {
         override val timestamp: Long =
@@ -651,5 +672,6 @@ private sealed class EntryItem {
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli()
+        override val entryId: Long = entry.id
     }
 }

@@ -3,6 +3,7 @@ package com.privatehealthjournal
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -46,7 +47,8 @@ import com.privatehealthjournal.sensor.StepSync
 import com.privatehealthjournal.ui.theme.PrivateHealthJournalTheme
 import com.privatehealthjournal.viewmodel.LogViewModel
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -54,6 +56,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.room.withTransaction
 import com.privatehealthjournal.data.AppDatabase
 import com.privatehealthjournal.data.repository.LogRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -63,6 +66,14 @@ class MainActivity : ComponentActivity() {
     ) { _: Boolean -> }
 
     private lateinit var stepSync: StepSync
+
+    private val pendingNavigation = MutableStateFlow<String?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingNavigation.value = intent.getStringExtra("navigate_to")?.takeIf { it in ALLOWED_NAV_ROUTES }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +92,9 @@ class MainActivity : ComponentActivity() {
         )
         stepSync = StepSync.create(applicationContext, syncRepo)
 
-        val navigateTo = intent?.getStringExtra("navigate_to")
+        pendingNavigation.value = intent
+            ?.getStringExtra("navigate_to")
+            ?.takeIf { it in ALLOWED_NAV_ROUTES }
 
         setContent {
             PrivateHealthJournalTheme {
@@ -103,10 +116,11 @@ class MainActivity : ComponentActivity() {
                         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                     }
 
-                    LaunchedEffect(navigateTo) {
-                        if (navigateTo != null) {
-                            navController.navigate(navigateTo)
-                        }
+                    val pending by pendingNavigation.collectAsState()
+                    LaunchedEffect(pending) {
+                        val route = pending ?: return@LaunchedEffect
+                        navController.navigate(route)
+                        pendingNavigation.value = null
                     }
 
                     NavHost(
@@ -491,5 +505,15 @@ class MainActivity : ComponentActivity() {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+    }
+
+    companion object {
+        // Whitelist of routes accepted via the `navigate_to` intent extra. Limited to
+        // no-arg top-level destinations — parameterized edit_*/{id} routes carry IDs and
+        // would need stricter validation if ever exposed via deep links.
+        private val ALLOWED_NAV_ROUTES = setOf(
+            "home", "history", "calendar", "settings",
+            "medication_sets", "biometrics_chart", "meal_budget", "cycle_tracking"
+        )
     }
 }

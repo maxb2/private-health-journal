@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class MealType {
@@ -10,7 +11,7 @@ enum class MealType {
     SNACK
 }
 
-@Entity(tableName = "meal_entries")
+@Entity(tableName = "meal_entries", indices = [Index("timestamp")])
 data class MealEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

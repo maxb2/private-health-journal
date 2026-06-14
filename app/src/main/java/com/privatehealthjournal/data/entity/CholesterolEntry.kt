@@ -1,9 +1,10 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "cholesterol_entries")
+@Entity(tableName = "cholesterol_entries", indices = [Index("timestamp")])
 data class CholesterolEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

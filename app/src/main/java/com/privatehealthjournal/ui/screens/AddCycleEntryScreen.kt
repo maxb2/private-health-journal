@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,11 +57,11 @@ fun AddCycleEntryScreen(
     val editingEntry by viewModel.editingCycleEntry.collectAsState()
     val isEditMode = editId != null
 
-    var selectedFlow by remember { mutableStateOf(FlowIntensity.MEDIUM) }
-    var selectedSymptoms by remember { mutableStateOf(emptySet<CycleSymptom>()) }
-    var notes by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var selectedFlow by rememberSaveable { mutableStateOf(FlowIntensity.MEDIUM) }
+    var selectedSymptoms by rememberSaveable { mutableStateOf(emptySet<CycleSymptom>()) }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(editId) {
         if (editId != null) {

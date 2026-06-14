@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,15 +63,15 @@ fun AddSymptomScreen(
     val symptomNames by viewModel.allSymptomNames.collectAsState()
     val isEditMode = editId != null
 
-    var symptomName by remember { mutableStateOf(prefillName ?: "") }
-    var severity by remember { mutableFloatStateOf(3f) }
-    var notes by remember { mutableStateOf("") }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var symptomName by rememberSaveable { mutableStateOf(prefillName ?: "") }
+    var severity by rememberSaveable { mutableFloatStateOf(3f) }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val currentTime = System.currentTimeMillis()
-    var startTime by remember { mutableLongStateOf(currentTime) }
-    var hasEndTime by remember { mutableStateOf(false) }
-    var endTime by remember { mutableLongStateOf(currentTime) }
+    var startTime by rememberSaveable { mutableLongStateOf(currentTime) }
+    var hasEndTime by rememberSaveable { mutableStateOf(false) }
+    var endTime by rememberSaveable { mutableLongStateOf(currentTime) }
 
     // Load existing entry for editing
     LaunchedEffect(editId) {

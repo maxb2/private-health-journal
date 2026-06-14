@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("setId")]
+    indices = [Index("setId"), Index("timestamp")]
 )
 data class MedicationSetLog(
     @PrimaryKey(autoGenerate = true)

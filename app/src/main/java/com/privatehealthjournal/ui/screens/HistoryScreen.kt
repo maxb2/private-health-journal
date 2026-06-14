@@ -170,40 +170,46 @@ fun HistoryScreen(
                 }
             }
 
-            val filteredEntries = when (filterType) {
-                FilterType.ALL -> {
-                    (allMeals.map { HistoryEntry.Meal(it) } +
-                            allSymptoms.map { HistoryEntry.Symptom(it) } +
-                            allMedications.map { HistoryEntry.Medication(it) } +
-                            allOtherEntries.map { HistoryEntry.Other(it) } +
-                            allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
-                            allCholesterol.map { HistoryEntry.Cholesterol(it) } +
-                            allWeight.map { HistoryEntry.Weight(it) } +
-                            allSpO2.map { HistoryEntry.SpO2(it) } +
-                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
-                            (if (showCycleTracking) allCycleEntries.map { HistoryEntry.Cycle(it) } else emptyList()) +
-                            (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
+            val filteredEntries = remember(
+                filterType, allMeals, allSymptoms, allMedications, allOtherEntries,
+                allBloodPressure, allCholesterol, allWeight, allSpO2, allBloodGlucose,
+                allCycleEntries, allStepCountEntries, showCycleTracking, showStepCounting
+            ) {
+                when (filterType) {
+                    FilterType.ALL -> {
+                        (allMeals.map { HistoryEntry.Meal(it) } +
+                                allSymptoms.map { HistoryEntry.Symptom(it) } +
+                                allMedications.map { HistoryEntry.Medication(it) } +
+                                allOtherEntries.map { HistoryEntry.Other(it) } +
+                                allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
+                                allCholesterol.map { HistoryEntry.Cholesterol(it) } +
+                                allWeight.map { HistoryEntry.Weight(it) } +
+                                allSpO2.map { HistoryEntry.SpO2(it) } +
+                                allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
+                                (if (showCycleTracking) allCycleEntries.map { HistoryEntry.Cycle(it) } else emptyList()) +
+                                (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
+                            .sortedByDescending { it.timestamp }
+                    }
+                    FilterType.MEALS -> allMeals.map { HistoryEntry.Meal(it) }
+                        .sortedByDescending { it.timestamp }
+                    FilterType.SYMPTOMS -> allSymptoms.map { HistoryEntry.Symptom(it) }
+                        .sortedByDescending { it.timestamp }
+                    FilterType.OTHER -> allOtherEntries.map { HistoryEntry.Other(it) }
+                        .sortedByDescending { it.timestamp }
+                    FilterType.MEDICATIONS -> allMedications.map { HistoryEntry.Medication(it) }
+                        .sortedByDescending { it.timestamp }
+                    FilterType.BIOMETRICS -> {
+                        (allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
+                                allCholesterol.map { HistoryEntry.Cholesterol(it) } +
+                                allWeight.map { HistoryEntry.Weight(it) } +
+                                allSpO2.map { HistoryEntry.SpO2(it) } +
+                                allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
+                                (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
+                            .sortedByDescending { it.timestamp }
+                    }
+                    FilterType.CYCLE -> allCycleEntries.map { HistoryEntry.Cycle(it) }
                         .sortedByDescending { it.timestamp }
                 }
-                FilterType.MEALS -> allMeals.map { HistoryEntry.Meal(it) }
-                    .sortedByDescending { it.timestamp }
-                FilterType.SYMPTOMS -> allSymptoms.map { HistoryEntry.Symptom(it) }
-                    .sortedByDescending { it.timestamp }
-                FilterType.OTHER -> allOtherEntries.map { HistoryEntry.Other(it) }
-                    .sortedByDescending { it.timestamp }
-                FilterType.MEDICATIONS -> allMedications.map { HistoryEntry.Medication(it) }
-                    .sortedByDescending { it.timestamp }
-                FilterType.BIOMETRICS -> {
-                    (allBloodPressure.map { HistoryEntry.BloodPressure(it) } +
-                            allCholesterol.map { HistoryEntry.Cholesterol(it) } +
-                            allWeight.map { HistoryEntry.Weight(it) } +
-                            allSpO2.map { HistoryEntry.SpO2(it) } +
-                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
-                            (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
-                        .sortedByDescending { it.timestamp }
-                }
-                FilterType.CYCLE -> allCycleEntries.map { HistoryEntry.Cycle(it) }
-                    .sortedByDescending { it.timestamp }
             }
 
             if (filteredEntries.isEmpty()) {
@@ -220,9 +226,12 @@ fun HistoryScreen(
                     )
                 }
             } else {
-                // Group entries by day
-                val entriesByDay = filteredEntries.groupBy { entry ->
-                    Instant.ofEpochMilli(entry.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+                val entriesByDay = remember(filteredEntries) {
+                    filteredEntries.groupBy { entry ->
+                        Instant.ofEpochMilli(entry.timestamp)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
                 }
 
                 val today = LocalDate.now()
@@ -262,7 +271,10 @@ fun HistoryScreen(
                                 )
                             }
                         }
-                        items(entries) { entry ->
+                        items(
+                            entries,
+                            key = { entry -> "${entry::class.simpleName}-${entry.entryId}" }
+                        ) { entry ->
                             when (entry) {
                                 is HistoryEntry.Meal -> MealEntryCard(
                                     meal = entry.entry,
@@ -334,45 +346,56 @@ fun HistoryScreen(
 
 private sealed class HistoryEntry {
     abstract val timestamp: Long
+    abstract val entryId: Long
 
     data class Meal(val entry: MealWithDetails) : HistoryEntry() {
         override val timestamp: Long = entry.meal.timestamp
+        override val entryId: Long = entry.meal.id
     }
 
     data class Symptom(val entry: SymptomEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class Other(val entry: OtherEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class Medication(val entry: MedicationEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class BloodPressure(val entry: BloodPressureEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class Cholesterol(val entry: CholesterolEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class Weight(val entry: WeightEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class SpO2(val entry: SpO2Entry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class BloodGlucose(val entry: BloodGlucoseEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class Cycle(val entry: CycleEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+        override val entryId: Long = entry.id
     }
 
     data class StepCount(val entry: StepCountEntry) : HistoryEntry() {
@@ -381,5 +404,6 @@ private sealed class HistoryEntry {
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli()
+        override val entryId: Long = entry.id
     }
 }

@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class FlowIntensity(val displayLabel: String) {
@@ -28,7 +29,7 @@ enum class CycleSymptom(val displayLabel: String) {
     }
 }
 
-@Entity(tableName = "cycle_entries")
+@Entity(tableName = "cycle_entries", indices = [Index("timestamp")])
 data class CycleEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
