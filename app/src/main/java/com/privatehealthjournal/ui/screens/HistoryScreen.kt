@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -54,6 +54,7 @@ import com.privatehealthjournal.ui.components.SpO2Card
 import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
+import com.privatehealthjournal.ui.nav.NavIntent
 import com.privatehealthjournal.viewmodel.LogViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -68,19 +69,9 @@ enum class FilterType {
 @Composable
 fun HistoryScreen(
     viewModel: LogViewModel,
-    onNavigateBack: () -> Unit,
-    onEditMeal: (Long) -> Unit = {},
-    onEditSymptom: (Long) -> Unit = {},
-    onEditOther: (Long) -> Unit = {},
-    onEditMedication: (Long) -> Unit = {},
-    onEditBloodPressure: (Long) -> Unit = {},
-    onEditCholesterol: (Long) -> Unit = {},
-    onEditWeight: (Long) -> Unit = {},
-    onEditSpO2: (Long) -> Unit = {},
-    onEditBloodGlucose: (Long) -> Unit = {},
-    onEditCycleEntry: (Long) -> Unit = {},
-    onEditStepCount: (Long) -> Unit = {}
+    onNavigate: (NavIntent) -> Unit
 ) {
+    val onNavigateBack = { onNavigate(NavIntent.Back) }
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
     val allMedications by viewModel.allMedications.collectAsState()
@@ -108,12 +99,12 @@ fun HistoryScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
@@ -255,7 +246,7 @@ fun HistoryScreen(
                                     .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Divider(
+                                HorizontalDivider(
                                     modifier = Modifier.weight(1f),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
@@ -265,7 +256,7 @@ fun HistoryScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 12.dp)
                                 )
-                                Divider(
+                                HorizontalDivider(
                                     modifier = Modifier.weight(1f),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
@@ -279,7 +270,7 @@ fun HistoryScreen(
                                 is HistoryEntry.Meal -> MealEntryCard(
                                     meal = entry.entry,
                                     onDelete = { viewModel.deleteMeal(entry.entry) },
-                                    onEdit = { onEditMeal(entry.entry.meal.id) }
+                                    onEdit = { onNavigate(NavIntent.EditMeal(entry.entry.meal.id)) }
                                 )
                                 is HistoryEntry.Symptom -> SymptomEntryCard(
                                     name = entry.entry.name,
@@ -288,52 +279,52 @@ fun HistoryScreen(
                                     startTime = entry.entry.startTime,
                                     endTime = entry.entry.endTime,
                                     onDelete = { viewModel.deleteSymptom(entry.entry) },
-                                    onEdit = { onEditSymptom(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditSymptom(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Other -> OtherEntryCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteOtherEntry(entry.entry) },
-                                    onEdit = { onEditOther(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditOther(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Medication -> MedicationCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteMedication(entry.entry) },
-                                    onEdit = { onEditMedication(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditMedication(entry.entry.id)) }
                                 )
                                 is HistoryEntry.BloodPressure -> BloodPressureCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteBloodPressure(entry.entry) },
-                                    onEdit = { onEditBloodPressure(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditBloodPressure(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Cholesterol -> CholesterolCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteCholesterol(entry.entry) },
-                                    onEdit = { onEditCholesterol(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditCholesterol(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Weight -> WeightCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteWeight(entry.entry) },
-                                    onEdit = { onEditWeight(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditWeight(entry.entry.id)) }
                                 )
                                 is HistoryEntry.SpO2 -> SpO2Card(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteSpO2(entry.entry) },
-                                    onEdit = { onEditSpO2(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditSpO2(entry.entry.id)) }
                                 )
                                 is HistoryEntry.BloodGlucose -> BloodGlucoseCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteBloodGlucose(entry.entry) },
-                                    onEdit = { onEditBloodGlucose(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditBloodGlucose(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Cycle -> CycleEntryCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteCycleEntry(entry.entry) },
-                                    onEdit = { onEditCycleEntry(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditCycleEntry(entry.entry.id)) }
                                 )
                                 is HistoryEntry.StepCount -> StepCountCard(
                                     entry = entry.entry,
                                     onDelete = { viewModel.deleteStepCount(entry.entry) },
-                                    onEdit = { onEditStepCount(entry.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditStepCount(entry.entry.id)) }
                                 )
                             }
                         }

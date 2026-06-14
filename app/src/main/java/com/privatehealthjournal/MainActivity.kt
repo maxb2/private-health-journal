@@ -49,13 +49,15 @@ import com.privatehealthjournal.viewmodel.LogViewModel
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import androidx.room.withTransaction
 import com.privatehealthjournal.data.AppDatabase
 import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.ui.nav.NavIntent
+import com.privatehealthjournal.ui.nav.route
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -127,44 +129,14 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = "home"
                     ) {
+                        val onNavigate: (NavIntent) -> Unit = { intent ->
+                            when (intent) {
+                                NavIntent.Back -> navController.popBackStack()
+                                else -> navController.navigate(intent.route())
+                            }
+                        }
                         composable("home") {
-                            HomeScreen(
-                                viewModel = viewModel,
-                                onAddMeal = { navController.navigate("add_meal") },
-                                onAddSymptom = { name ->
-                                    if (name != null) navController.navigate("add_symptom?name=$name")
-                                    else navController.navigate("add_symptom")
-                                },
-                                onAddOther = { otherType -> navController.navigate("add_other?type=$otherType") },
-                                onAddMedication = { name ->
-                                    if (name != null) navController.navigate("add_medication?name=$name")
-                                    else navController.navigate("add_medication")
-                                },
-                                onAddBloodPressure = { navController.navigate("add_blood_pressure") },
-                                onAddCholesterol = { navController.navigate("add_cholesterol") },
-                                onAddWeight = { navController.navigate("add_weight") },
-                                onAddSpO2 = { navController.navigate("add_spo2") },
-                                onAddBloodGlucose = { navController.navigate("add_blood_glucose") },
-                                onAddStepCount = { navController.navigate("add_step_count") },
-                                onViewBiometricsChart = { navController.navigate("biometrics_chart") },
-                                onViewHistory = { navController.navigate("history") },
-                                onViewCalendar = { navController.navigate("calendar") },
-                                onViewSettings = { navController.navigate("settings") },
-                                onEditMeal = { id -> navController.navigate("edit_meal/$id") },
-                                onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
-                                onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
-                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
-                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
-                                onEditWeight = { id -> navController.navigate("edit_weight/$id") },
-                                onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
-                                onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") },
-                                onViewMedicationSets = { navController.navigate("medication_sets") },
-                                onViewMealBudget = { navController.navigate("meal_budget") },
-                                onViewCycleTracking = { navController.navigate("cycle_tracking") },
-                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") }
-                            )
+                            HomeScreen(viewModel = viewModel, onNavigate = onNavigate)
                         }
                         composable(
                             route = "add_meal?mealType={mealType}",
@@ -276,38 +248,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("calendar") {
-                            CalendarScreen(
-                                viewModel = viewModel,
-                                onNavigateBack = { navController.popBackStack() },
-                                onEditMeal = { id -> navController.navigate("edit_meal/$id") },
-                                onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
-                                onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
-                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
-                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
-                                onEditWeight = { id -> navController.navigate("edit_weight/$id") },
-                                onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
-                                onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") },
-                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") }
-                            )
+                            CalendarScreen(viewModel = viewModel, onNavigate = onNavigate)
                         }
                         composable("history") {
-                            HistoryScreen(
-                                viewModel = viewModel,
-                                onNavigateBack = { navController.popBackStack() },
-                                onEditMeal = { id -> navController.navigate("edit_meal/$id") },
-                                onEditSymptom = { id -> navController.navigate("edit_symptom/$id") },
-                                onEditOther = { id -> navController.navigate("edit_other/$id") },
-                                onEditMedication = { id -> navController.navigate("edit_medication/$id") },
-                                onEditBloodPressure = { id -> navController.navigate("edit_blood_pressure/$id") },
-                                onEditCholesterol = { id -> navController.navigate("edit_cholesterol/$id") },
-                                onEditWeight = { id -> navController.navigate("edit_weight/$id") },
-                                onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
-                                onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") },
-                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") }
-                            )
+                            HistoryScreen(viewModel = viewModel, onNavigate = onNavigate)
                         }
                         composable("cycle_tracking") {
                             CycleTrackingScreen(

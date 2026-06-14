@@ -13,23 +13,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -52,7 +48,6 @@ fun AddWeightScreen(
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
-    val editingEntry by viewModel.editingWeight.collectAsState()
     val isEditMode = editId != null
 
     var weight by rememberSaveable { mutableStateOf("") }
@@ -61,47 +56,30 @@ fun AddWeightScreen(
     var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadWeightForEditing(editId)
-        }
-    }
-
-    LaunchedEffect(editingEntry) {
-        editingEntry?.let { entry ->
-            weight = entry.weight.toString()
-            unit = entry.unit
-            notes = entry.notes
-            timestamp = entry.timestamp
-            existingId = entry.id
-        }
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingWeight,
+        load = { viewModel.loadWeightForEditing(it) }
+    ) { entry ->
+        weight = entry.weight.toString()
+        unit = entry.unit
+        notes = entry.notes
+        timestamp = entry.timestamp
+        existingId = entry.id
     }
 
     val isValid = weight.toDoubleOrNull() != null && weight.toDoubleOrNull()!! > 0
 
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Weight" else "Log Weight",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Weight" else "Log Weight",
+                onBack = handleBack
             )
         }
     ) { paddingValues ->

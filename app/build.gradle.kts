@@ -109,8 +109,11 @@ dependencies {
     testImplementation("com.google.truth:truth:1.1.5")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.05.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.room:room-testing:2.8.4")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

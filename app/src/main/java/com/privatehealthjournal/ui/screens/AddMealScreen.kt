@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cookie
 import androidx.compose.material.icons.filled.DinnerDining
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.filled.BrunchDining
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -36,9 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -56,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.MealEntry
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -66,7 +64,6 @@ fun AddMealScreen(
     editId: Long? = null,
     preselectedMealType: String? = null
 ) {
-    val editingMeal by viewModel.editingMeal.collectAsState()
     val isEditMode = editId != null
 
     val initialMealType = preselectedMealType?.let {
@@ -86,51 +83,33 @@ fun AddMealScreen(
     val existingTags by viewModel.allTags.collectAsState()
     val foodNames by viewModel.allFoodNames.collectAsState()
 
-    // Load existing entry for editing
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadMealForEditing(editId)
-        }
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingMeal,
+        load = { viewModel.loadMealForEditing(it) }
+    ) { mealWithDetails ->
+        selectedMealType = mealWithDetails.meal.mealType
+        foods.clear()
+        foods.addAll(mealWithDetails.foods.map { it.name })
+        tags.clear()
+        tags.addAll(mealWithDetails.tags.map { it.name })
+        notes = mealWithDetails.meal.notes
+        pointCostText = mealWithDetails.meal.pointCost?.toString() ?: ""
+        timestamp = mealWithDetails.meal.timestamp
+        existingId = mealWithDetails.meal.id
     }
 
-    // Populate fields when editing entry is loaded
-    LaunchedEffect(editingMeal) {
-        editingMeal?.let { mealWithDetails ->
-            selectedMealType = mealWithDetails.meal.mealType
-            foods.clear()
-            foods.addAll(mealWithDetails.foods.map { it.name })
-            tags.clear()
-            tags.addAll(mealWithDetails.tags.map { it.name })
-            notes = mealWithDetails.meal.notes
-            pointCostText = mealWithDetails.meal.pointCost?.toString() ?: ""
-            timestamp = mealWithDetails.meal.timestamp
-            existingId = mealWithDetails.meal.id
-        }
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
     }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Meal" else "Log Meal",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Meal" else "Log Meal",
+                onBack = handleBack,
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
     ) { paddingValues ->
