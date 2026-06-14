@@ -2,10 +2,13 @@ package com.privatehealthjournal.data.export
 
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
+import com.privatehealthjournal.data.entity.BowelMovementEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.MedicationEntry
+import com.privatehealthjournal.data.entity.MedicationSetLog
+import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
@@ -20,14 +23,17 @@ object DataExporter {
     fun export(
         meals: List<MealWithDetails>,
         symptoms: List<SymptomEntry>,
-        medications: List<MedicationEntry>,
-        otherEntries: List<OtherEntry>,
+        bowelMovements: List<BowelMovementEntry> = emptyList(),
+        medications: List<MedicationEntry> = emptyList(),
+        otherEntries: List<OtherEntry> = emptyList(),
         bloodPressureEntries: List<BloodPressureEntry> = emptyList(),
         cholesterolEntries: List<CholesterolEntry> = emptyList(),
         weightEntries: List<WeightEntry> = emptyList(),
         spO2Entries: List<SpO2Entry> = emptyList(),
         bloodGlucoseEntries: List<BloodGlucoseEntry> = emptyList(),
         medicationSets: List<MedicationSetWithItems> = emptyList(),
+        remindersBySetId: Map<Long, List<MedicationSetReminder>> = emptyMap(),
+        logsBySetId: Map<Long, List<MedicationSetLog>> = emptyMap(),
         cycleEntries: List<CycleEntry> = emptyList()
     ): String {
         val exportData = ExportData(
@@ -48,6 +54,13 @@ object DataExporter {
                     notes = symptom.notes,
                     startTime = symptom.startTime,
                     endTime = symptom.endTime
+                )
+            },
+            bowelMovements = bowelMovements.map { bm ->
+                ExportedBowelMovement(
+                    bristolType = bm.bristolType,
+                    notes = bm.notes,
+                    timestamp = bm.timestamp
                 )
             },
             medications = medications.map { med ->
@@ -113,6 +126,7 @@ object DataExporter {
                 )
             },
             medicationSets = medicationSets.map { setWithItems ->
+                val setId = setWithItems.set.id
                 ExportedMedicationSet(
                     name = setWithItems.set.name,
                     items = setWithItems.items.map { item ->
@@ -120,6 +134,17 @@ object DataExporter {
                             name = item.name,
                             dosage = item.dosage
                         )
+                    },
+                    reminders = (remindersBySetId[setId] ?: emptyList()).map { reminder ->
+                        ExportedMedicationSetReminder(
+                            hour = reminder.hour,
+                            minute = reminder.minute,
+                            daysOfWeek = reminder.daysOfWeek,
+                            enabled = reminder.enabled
+                        )
+                    },
+                    logs = (logsBySetId[setId] ?: emptyList()).map { log ->
+                        ExportedMedicationSetLog(timestamp = log.timestamp)
                     }
                 )
             },

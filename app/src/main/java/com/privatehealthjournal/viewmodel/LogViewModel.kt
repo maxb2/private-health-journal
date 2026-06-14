@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -736,9 +737,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun exportData(uri: Uri, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
+                val logsBySetId = repository.getAllMedicationSetLogs().first()
+                    .groupBy { it.setId }
                 val json = DataExporter.export(
                     meals = allMeals.value,
                     symptoms = allSymptomEntries.value,
+                    bowelMovements = allBowelMovements.value,
                     medications = allMedications.value,
                     otherEntries = allOtherEntries.value,
                     bloodPressureEntries = allBloodPressureEntries.value,
@@ -747,12 +751,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     spO2Entries = allSpO2Entries.value,
                     bloodGlucoseEntries = allBloodGlucoseEntries.value,
                     medicationSets = allMedicationSets.value,
+                    remindersBySetId = allRemindersBySet.value,
+                    logsBySetId = logsBySetId,
                     cycleEntries = allCycleEntries.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
                 }
                 val total = allMeals.value.size + allSymptomEntries.value.size +
+                    allBowelMovements.value.size +
                     allMedications.value.size + allOtherEntries.value.size +
                     allBloodPressureEntries.value.size + allCholesterolEntries.value.size +
                     allWeightEntries.value.size + allSpO2Entries.value.size +
@@ -776,8 +783,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
                 when (val result = DataImporter.import(json, repository)) {
                     is ImportResult.Success -> {
+                        if (result.medicationSetRemindersImported > 0) {
+                            ReminderScheduler.rescheduleAllReminders(getApplication())
+                        }
                         onResult(true, "Imported ${result.totalImported} entries: " +
                             "${result.mealsImported} meals, ${result.symptomsImported} symptoms, " +
+                            "${result.bowelMovementsImported} bowel movements, " +
                             "${result.medicationsImported} medications, ${result.otherEntriesImported} other")
                     }
                     is ImportResult.Error -> {

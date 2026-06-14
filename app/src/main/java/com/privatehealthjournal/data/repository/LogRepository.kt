@@ -358,6 +358,9 @@ class LogRepository(
     suspend fun insertMedicationSetLog(log: MedicationSetLog): Long =
         medicationSetLogDao.insert(log)
 
+    fun getAllMedicationSetLogs(): Flow<List<MedicationSetLog>> =
+        medicationSetLogDao.getAllLogs()
+
     // Cycle Entry methods
     suspend fun insertCycleEntry(entry: CycleEntry): Long = cycleEntryDao.insert(entry)
     suspend fun updateCycleEntry(entry: CycleEntry) = cycleEntryDao.update(entry)

@@ -2,11 +2,14 @@ package com.privatehealthjournal.data.export
 
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.BloodPressureEntry
+import com.privatehealthjournal.data.entity.BowelMovementEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.FlowIntensity
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MedicationEntry
+import com.privatehealthjournal.data.entity.MedicationSetLog
+import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.GlucoseMealContext
@@ -29,6 +32,7 @@ object DataImporter {
 
             var mealsImported = 0
             var symptomsImported = 0
+            var bowelMovementsImported = 0
             var medicationsImported = 0
             var otherEntriesImported = 0
             var bloodPressureImported = 0
@@ -37,6 +41,8 @@ object DataImporter {
             var spO2Imported = 0
             var bloodGlucoseImported = 0
             var medicationSetsImported = 0
+            var medicationSetRemindersImported = 0
+            var medicationSetLogsImported = 0
             var cycleEntriesImported = 0
 
             // Import meals
@@ -69,6 +75,18 @@ object DataImporter {
                     )
                 )
                 symptomsImported++
+            }
+
+            // Import bowel movements
+            exportData.bowelMovements.forEach { bm ->
+                repository.insertBowelMovement(
+                    BowelMovementEntry(
+                        bristolType = bm.bristolType,
+                        notes = bm.notes,
+                        timestamp = bm.timestamp
+                    )
+                )
+                bowelMovementsImported++
             }
 
             // Import medications
@@ -190,11 +208,31 @@ object DataImporter {
                 bloodGlucoseImported++
             }
 
-            // Import medication sets
+            // Import medication sets (with nested reminders + logs)
             exportData.medicationSets.forEach { exportedSet ->
                 val items = exportedSet.items.map { it.name to it.dosage }
-                repository.insertMedicationSet(exportedSet.name, items)
+                val newSetId = repository.insertMedicationSet(exportedSet.name, items)
                 medicationSetsImported++
+
+                exportedSet.reminders.forEach { reminder ->
+                    repository.insertReminder(
+                        MedicationSetReminder(
+                            setId = newSetId,
+                            hour = reminder.hour,
+                            minute = reminder.minute,
+                            daysOfWeek = reminder.daysOfWeek,
+                            enabled = reminder.enabled
+                        )
+                    )
+                    medicationSetRemindersImported++
+                }
+
+                exportedSet.logs.forEach { log ->
+                    repository.insertMedicationSetLog(
+                        MedicationSetLog(setId = newSetId, timestamp = log.timestamp)
+                    )
+                    medicationSetLogsImported++
+                }
             }
 
             // Import cycle entries
@@ -218,6 +256,7 @@ object DataImporter {
             ImportResult.Success(
                 mealsImported = mealsImported,
                 symptomsImported = symptomsImported,
+                bowelMovementsImported = bowelMovementsImported,
                 medicationsImported = medicationsImported,
                 otherEntriesImported = otherEntriesImported,
                 bloodPressureImported = bloodPressureImported,
@@ -226,6 +265,8 @@ object DataImporter {
                 spO2Imported = spO2Imported,
                 bloodGlucoseImported = bloodGlucoseImported,
                 medicationSetsImported = medicationSetsImported,
+                medicationSetRemindersImported = medicationSetRemindersImported,
+                medicationSetLogsImported = medicationSetLogsImported,
                 cycleEntriesImported = cycleEntriesImported
             )
         } catch (e: Exception) {
@@ -240,18 +281,24 @@ sealed class ImportResult {
         val symptomsImported: Int,
         val medicationsImported: Int,
         val otherEntriesImported: Int,
+        val bowelMovementsImported: Int = 0,
         val bloodPressureImported: Int = 0,
         val cholesterolImported: Int = 0,
         val weightImported: Int = 0,
         val spO2Imported: Int = 0,
         val bloodGlucoseImported: Int = 0,
         val medicationSetsImported: Int = 0,
+        val medicationSetRemindersImported: Int = 0,
+        val medicationSetLogsImported: Int = 0,
         val cycleEntriesImported: Int = 0
     ) : ImportResult() {
         val totalImported: Int
-            get() = mealsImported + symptomsImported + medicationsImported + otherEntriesImported +
+            get() = mealsImported + symptomsImported + bowelMovementsImported +
+                    medicationsImported + otherEntriesImported +
                     bloodPressureImported + cholesterolImported + weightImported + spO2Imported +
-                    bloodGlucoseImported + medicationSetsImported + cycleEntriesImported
+                    bloodGlucoseImported + medicationSetsImported +
+                    medicationSetRemindersImported + medicationSetLogsImported +
+                    cycleEntriesImported
     }
 
     data class Error(val message: String) : ImportResult()

@@ -1,6 +1,6 @@
 ---
 name: run-emulator
-description: Builds and runs the food-symptom-log app on the Android emulator. Use when the user says "run on emulator", "open in emulator", "launch app", or wants to test the app live.
+description: Builds and runs the Private Health Journal app on the Android emulator. Use when the user says "run on emulator", "open in emulator", "launch app", or wants to test the app live.
 ---
 
 # Run on Emulator

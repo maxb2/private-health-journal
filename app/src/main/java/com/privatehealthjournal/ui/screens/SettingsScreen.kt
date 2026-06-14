@@ -267,7 +267,7 @@ fun SettingsScreen(
             Button(
                 onClick = {
                     val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                    exportLauncher.launch("food-symptom-log-$dateStr.json")
+                    exportLauncher.launch("private-health-journal-$dateStr.json")
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = totalEntries > 0

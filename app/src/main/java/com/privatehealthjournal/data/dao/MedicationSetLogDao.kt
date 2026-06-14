@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.privatehealthjournal.data.entity.MedicationSetLog
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MedicationSetLogDao {
@@ -12,4 +13,7 @@ interface MedicationSetLogDao {
 
     @Query("SELECT * FROM medication_set_logs WHERE setId = :setId AND timestamp >= :startOfDay AND timestamp < :endOfDay LIMIT 1")
     suspend fun getLogForSetOnDay(setId: Long, startOfDay: Long, endOfDay: Long): MedicationSetLog?
+
+    @Query("SELECT * FROM medication_set_logs ORDER BY timestamp")
+    fun getAllLogs(): Flow<List<MedicationSetLog>>
 }
