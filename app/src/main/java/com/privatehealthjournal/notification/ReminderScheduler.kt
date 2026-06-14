@@ -64,9 +64,18 @@ object ReminderScheduler {
         notificationManager.cancel(setId.toInt())
     }
 
-    fun computeNextTriggerTime(reminder: MedicationSetReminder): Long {
-        val now = Calendar.getInstance()
+    fun computeNextTriggerTime(reminder: MedicationSetReminder): Long =
+        computeNextTriggerTime(reminder, System.currentTimeMillis())
+
+    /**
+     * Pure variant accepting the current time as a parameter so the day-wrap, all-days-off,
+     * and "today's slot already passed" branches can be exercised in unit tests without
+     * relying on the system clock. Visible for testing.
+     */
+    fun computeNextTriggerTime(reminder: MedicationSetReminder, nowMillis: Long): Long {
+        val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
         val candidate = Calendar.getInstance().apply {
+            timeInMillis = nowMillis
             set(Calendar.HOUR_OF_DAY, reminder.hour)
             set(Calendar.MINUTE, reminder.minute)
             set(Calendar.SECOND, 0)
@@ -85,7 +94,7 @@ object ReminderScheduler {
                 }
             }
         }
-        // Fallback: schedule for tomorrow at the specified time
+        // Fallback (no days enabled): schedule for tomorrow at the specified time
         candidate.timeInMillis = now.timeInMillis
         candidate.add(Calendar.DAY_OF_YEAR, 1)
         candidate.set(Calendar.HOUR_OF_DAY, reminder.hour)

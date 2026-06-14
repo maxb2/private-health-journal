@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
+import androidx.room.withTransaction
 import com.privatehealthjournal.data.AppDatabase
 import com.privatehealthjournal.data.repository.LogRepository
 import kotlinx.coroutines.launch
@@ -75,7 +76,8 @@ class MainActivity : ComponentActivity() {
             db.cholesterolDao(), db.weightDao(), db.spO2Dao(),
             db.bloodGlucoseDao(), db.medicationSetDao(),
             db.medicationSetReminderDao(), db.medicationSetLogDao(),
-            db.cycleEntryDao(), db.stepCountDao()
+            db.cycleEntryDao(), db.stepCountDao(),
+            transaction = { block -> db.withTransaction { block() } }
         )
         stepSync = StepSync.create(applicationContext, syncRepo)
 
@@ -473,6 +475,7 @@ class MainActivity : ComponentActivity() {
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Reminders to log medication sets"
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
         }
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
