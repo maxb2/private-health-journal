@@ -45,6 +45,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,15 +73,15 @@ fun AddMealScreen(
         try { MealType.valueOf(it) } catch (e: IllegalArgumentException) { MealType.BREAKFAST }
     } ?: MealType.BREAKFAST
 
-    var selectedMealType by remember { mutableStateOf(initialMealType) }
+    var selectedMealType by rememberSaveable { mutableStateOf(initialMealType) }
     val foods = remember { mutableStateListOf<String>() }
-    var currentFood by remember { mutableStateOf("") }
+    var currentFood by rememberSaveable { mutableStateOf("") }
     val tags = remember { mutableStateListOf<String>() }
-    var currentTag by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var pointCostText by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var currentTag by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var pointCostText by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val existingTags by viewModel.allTags.collectAsState()
     val foodNames by viewModel.allFoodNames.collectAsState()

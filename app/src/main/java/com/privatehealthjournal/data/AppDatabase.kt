@@ -63,7 +63,7 @@ import com.privatehealthjournal.data.entity.WeightEntry
         CycleEntry::class,
         StepCountEntry::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -186,6 +186,28 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Every entry-list query does `ORDER BY <time> DESC`. Add a covering
+                // index so it doesn't require a full-table sort.
+                val tablesByTimestamp = listOf(
+                    "meal_entries", "bowel_movement_entries",
+                    "medication_entries", "other_entries", "blood_pressure_entries",
+                    "cholesterol_entries", "weight_entries", "spo2_entries",
+                    "blood_glucose_entries", "cycle_entries", "medication_set_logs"
+                )
+                tablesByTimestamp.forEach { table ->
+                    database.execSQL(
+                        "CREATE INDEX IF NOT EXISTS `index_${table}_timestamp` ON `$table` (`timestamp`)"
+                    )
+                }
+                // symptom_entries sorts by startTime (no timestamp column)
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_symptom_entries_startTime` ON `symptom_entries` (`startTime`)"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -193,7 +215,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "private_health_journal_database"
                 )
-                    .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+                    .addMigrations(
+                        MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
+                        MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15
+                    )
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

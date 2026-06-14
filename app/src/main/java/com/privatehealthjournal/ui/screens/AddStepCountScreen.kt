@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,9 +60,11 @@ fun AddStepCountScreen(
     val editingEntry by viewModel.editingStepCount.collectAsState()
     val isEditMode = editId != null
 
-    var steps by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var dateMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var steps by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var dateMillis by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    // existingEntry / showDatePicker stay on `remember` — StepCountEntry has no Saver and
+    // the picker flag is transient UI state.
     var existingEntry by remember { mutableStateOf<StepCountEntry?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
 

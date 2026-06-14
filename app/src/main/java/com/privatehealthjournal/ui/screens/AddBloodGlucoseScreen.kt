@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -53,12 +54,12 @@ fun AddBloodGlucoseScreen(
     val editingEntry by viewModel.editingBloodGlucose.collectAsState()
     val isEditMode = editId != null
 
-    var glucoseLevel by remember { mutableStateOf("") }
-    var unit by remember { mutableStateOf(GlucoseUnit.MG_DL) }
-    var mealContext by remember { mutableStateOf<GlucoseMealContext?>(null) }
-    var notes by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var glucoseLevel by rememberSaveable { mutableStateOf("") }
+    var unit by rememberSaveable { mutableStateOf(GlucoseUnit.MG_DL) }
+    var mealContext by rememberSaveable { mutableStateOf<GlucoseMealContext?>(null) }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(editId) {
         if (editId != null) {

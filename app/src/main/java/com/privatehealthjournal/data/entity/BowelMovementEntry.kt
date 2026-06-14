@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class BristolType(val type: Int, val displayName: String, val description: String) {
@@ -17,7 +18,7 @@ enum class BristolType(val type: Int, val displayName: String, val description: 
     }
 }
 
-@Entity(tableName = "bowel_movement_entries")
+@Entity(tableName = "bowel_movement_entries", indices = [Index("timestamp")])
 data class BowelMovementEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

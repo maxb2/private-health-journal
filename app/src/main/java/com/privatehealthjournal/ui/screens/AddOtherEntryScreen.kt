@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,16 +76,16 @@ fun AddOtherEntryScreen(
         try { OtherEntryType.valueOf(it) } catch (e: IllegalArgumentException) { OtherEntryType.BOWEL_MOVEMENT }
     } ?: OtherEntryType.BOWEL_MOVEMENT
 
-    var selectedType by remember { mutableStateOf(initialType) }
-    var subType by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var pointCreditText by remember { mutableStateOf("") }
-    var timestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var selectedType by rememberSaveable { mutableStateOf(initialType) }
+    var subType by rememberSaveable { mutableStateOf("") }
+    var value by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf("") }
+    var pointCreditText by rememberSaveable { mutableStateOf("") }
+    var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     // For bowel movement Bristol scale
-    var selectedBristolType by remember { mutableIntStateOf(4) }
+    var selectedBristolType by rememberSaveable { mutableIntStateOf(4) }
 
     // Load existing entry for editing
     LaunchedEffect(editId) {

@@ -1,9 +1,10 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "symptom_entries")
+@Entity(tableName = "symptom_entries", indices = [Index("startTime")])
 data class SymptomEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

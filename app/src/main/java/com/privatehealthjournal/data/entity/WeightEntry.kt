@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class WeightUnit {
@@ -8,7 +9,7 @@ enum class WeightUnit {
     KG
 }
 
-@Entity(tableName = "weight_entries")
+@Entity(tableName = "weight_entries", indices = [Index("timestamp")])
 data class WeightEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

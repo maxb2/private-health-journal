@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,9 +64,9 @@ fun AddMedicationSetScreen(
     val medicationNames by viewModel.allMedicationNames.collectAsState()
     val isEditMode = editId != null
 
-    var setName by remember { mutableStateOf("") }
+    var setName by rememberSaveable { mutableStateOf("") }
     val items = remember { mutableStateListOf(MedItemState()) }
-    var existingId by remember { mutableStateOf<Long?>(null) }
+    var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(editId) {
         if (editId != null) {

@@ -261,7 +261,10 @@ fun CalendarScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(selectedEntries) { entry ->
+                    items(
+                        selectedEntries,
+                        key = { entry -> "${entry::class.simpleName}-${entry.entryId}" }
+                    ) { entry ->
                         when (entry) {
                             is CalendarEntry.Meal -> MealEntryCard(
                                 meal = entry.entry,
@@ -491,15 +494,39 @@ private fun CalendarDayCell(
 }
 
 private sealed class CalendarEntry {
-    data class Meal(val entry: MealWithDetails) : CalendarEntry()
-    data class Symptom(val entry: SymptomEntry) : CalendarEntry()
-    data class Medication(val entry: MedicationEntry) : CalendarEntry()
-    data class Other(val entry: OtherEntry) : CalendarEntry()
-    data class BloodPressure(val entry: BloodPressureEntry) : CalendarEntry()
-    data class Cholesterol(val entry: CholesterolEntry) : CalendarEntry()
-    data class Weight(val entry: WeightEntry) : CalendarEntry()
-    data class SpO2(val entry: SpO2Entry) : CalendarEntry()
-    data class BloodGlucose(val entry: BloodGlucoseEntry) : CalendarEntry()
-    data class Cycle(val entry: CycleEntry) : CalendarEntry()
-    data class StepCount(val entry: StepCountEntry) : CalendarEntry()
+    abstract val entryId: Long
+
+    data class Meal(val entry: MealWithDetails) : CalendarEntry() {
+        override val entryId: Long = entry.meal.id
+    }
+    data class Symptom(val entry: SymptomEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class Medication(val entry: MedicationEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class Other(val entry: OtherEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class BloodPressure(val entry: BloodPressureEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class Cholesterol(val entry: CholesterolEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class Weight(val entry: WeightEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class SpO2(val entry: SpO2Entry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class BloodGlucose(val entry: BloodGlucoseEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class Cycle(val entry: CycleEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
+    data class StepCount(val entry: StepCountEntry) : CalendarEntry() {
+        override val entryId: Long = entry.id
+    }
 }

@@ -1,6 +1,7 @@
 package com.privatehealthjournal.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class GlucoseUnit(val displayLabel: String) {
@@ -15,7 +16,7 @@ enum class GlucoseMealContext(val displayLabel: String) {
     BEDTIME("Bedtime")
 }
 
-@Entity(tableName = "blood_glucose_entries")
+@Entity(tableName = "blood_glucose_entries", indices = [Index("timestamp")])
 data class BloodGlucoseEntry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
