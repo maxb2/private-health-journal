@@ -42,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.StepCountEntry
-import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.ui.components.DatePickerDialogWrapper
 import com.privatehealthjournal.ui.components.formatDate
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -198,7 +197,6 @@ fun AddStepCountScreen(
                             existing.copy(
                                 dateEpochDay = epochDay,
                                 steps = stepsVal,
-                                source = StepSource.MANUAL,
                                 notes = notes.trim()
                             )
                         )

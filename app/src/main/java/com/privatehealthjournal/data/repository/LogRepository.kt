@@ -385,7 +385,8 @@ class LogRepository(
     suspend fun getStepCountByEpochDay(day: Long): StepCountEntry? = stepCountDao.getByEpochDay(day)
 
     /**
-     * Merge rule: manual entries are sticky; auto sources overwrite each other freely.
+     * Merge rule: a higher-priority source never gets overwritten by a lower-priority one.
+     * Priority: MANUAL > HEALTH_CONNECT > SENSOR. A same-or-higher-priority write replaces.
      * Returns the row id (existing or new).
      */
     suspend fun recordStepCount(
@@ -396,7 +397,7 @@ class LogRepository(
         timestamp: Long = System.currentTimeMillis()
     ): Long {
         val existing = stepCountDao.getByEpochDay(dateEpochDay)
-        if (existing != null && existing.source == StepSource.MANUAL && source != StepSource.MANUAL) {
+        if (existing != null && stepSourcePriority(existing.source) > stepSourcePriority(source)) {
             return existing.id
         }
         val entry = StepCountEntry(
@@ -408,6 +409,12 @@ class LogRepository(
             timestamp = timestamp
         )
         return stepCountDao.upsert(entry)
+    }
+
+    private fun stepSourcePriority(source: StepSource): Int = when (source) {
+        StepSource.MANUAL -> 2
+        StepSource.HEALTH_CONNECT -> 1
+        StepSource.SENSOR -> 0
     }
 
     suspend fun upsertStepCount(entry: StepCountEntry): Long = stepCountDao.upsert(entry)
