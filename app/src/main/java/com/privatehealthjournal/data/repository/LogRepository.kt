@@ -12,6 +12,7 @@ import com.privatehealthjournal.data.dao.MedicationSetLogDao
 import com.privatehealthjournal.data.dao.MedicationSetReminderDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
 import com.privatehealthjournal.data.dao.SpO2Dao
+import com.privatehealthjournal.data.dao.StepCountDao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
@@ -30,6 +31,8 @@ import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
+import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -49,7 +52,8 @@ class LogRepository(
     private val medicationSetDao: MedicationSetDao,
     private val medicationSetReminderDao: MedicationSetReminderDao,
     private val medicationSetLogDao: MedicationSetLogDao,
-    private val cycleEntryDao: CycleEntryDao
+    private val cycleEntryDao: CycleEntryDao,
+    private val stepCountDao: StepCountDao
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -68,6 +72,7 @@ class LogRepository(
     val allFoodNames: Flow<List<String>> = mealDao.getAllFoodNames()
     val allSymptomNames: Flow<List<String>> = symptomEntryDao.getAllSymptomNames()
     val allCycleEntries: Flow<List<CycleEntry>> = cycleEntryDao.getAllCycleEntries()
+    val allStepCountEntries: Flow<List<StepCountEntry>> = stepCountDao.getAllStepCountEntries()
     fun getDistinctOtherSubTypes(type: OtherEntryType): Flow<List<String>> =
         otherEntryDao.getDistinctSubTypes(type)
 
@@ -113,6 +118,10 @@ class LogRepository(
 
     fun getRecentCycleEntries(limit: Int = 5): Flow<List<CycleEntry>> {
         return cycleEntryDao.getRecentCycleEntries(limit)
+    }
+
+    fun getRecentStepCountEntries(limit: Int = 5): Flow<List<StepCountEntry>> {
+        return stepCountDao.getRecentStepCountEntries(limit)
     }
 
     suspend fun insertMeal(
@@ -366,6 +375,42 @@ class LogRepository(
     suspend fun updateCycleEntry(entry: CycleEntry) = cycleEntryDao.update(entry)
     suspend fun deleteCycleEntry(entry: CycleEntry) = cycleEntryDao.delete(entry)
     suspend fun getCycleEntryById(id: Long): CycleEntry? = cycleEntryDao.getById(id)
+
+    // Step Count methods
+    suspend fun insertStepCount(entry: StepCountEntry): Long = stepCountDao.insert(entry)
+    suspend fun updateStepCount(entry: StepCountEntry) = stepCountDao.update(entry)
+    suspend fun deleteStepCount(entry: StepCountEntry) = stepCountDao.delete(entry)
+    suspend fun deleteStepCountById(id: Long) = stepCountDao.deleteById(id)
+    suspend fun getStepCountById(id: Long): StepCountEntry? = stepCountDao.getById(id)
+    suspend fun getStepCountByEpochDay(day: Long): StepCountEntry? = stepCountDao.getByEpochDay(day)
+
+    /**
+     * Merge rule: manual entries are sticky; auto sources overwrite each other freely.
+     * Returns the row id (existing or new).
+     */
+    suspend fun recordStepCount(
+        dateEpochDay: Long,
+        steps: Int,
+        source: StepSource,
+        notes: String = "",
+        timestamp: Long = System.currentTimeMillis()
+    ): Long {
+        val existing = stepCountDao.getByEpochDay(dateEpochDay)
+        if (existing != null && existing.source == StepSource.MANUAL && source != StepSource.MANUAL) {
+            return existing.id
+        }
+        val entry = StepCountEntry(
+            id = existing?.id ?: 0,
+            dateEpochDay = dateEpochDay,
+            steps = steps,
+            source = source,
+            notes = notes,
+            timestamp = timestamp
+        )
+        return stepCountDao.upsert(entry)
+    }
+
+    suspend fun upsertStepCount(entry: StepCountEntry): Long = stepCountDao.upsert(entry)
 
     suspend fun hasSetBeenLoggedToday(setId: Long): Boolean {
         val calendar = java.util.Calendar.getInstance()

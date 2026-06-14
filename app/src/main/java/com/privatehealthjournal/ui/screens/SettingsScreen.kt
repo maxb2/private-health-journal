@@ -47,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
+import com.privatehealthjournal.sensor.HealthConnectStepReader
 import com.privatehealthjournal.viewmodel.LogViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,11 +68,39 @@ fun SettingsScreen(
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val showCycleTracking by viewModel.showCycleTracking.collectAsState()
+    val showStepCounting by viewModel.showStepCounting.collectAsState()
+    val stepSensorEnabled by viewModel.stepSensorEnabled.collectAsState()
+    val healthConnectEnabled by viewModel.healthConnectEnabled.collectAsState()
+    val stepsPerPointCredit by viewModel.stepsPerPointCredit.collectAsState()
 
     var budgetText by remember { mutableStateOf("") }
+    var stepsPerCreditText by remember { mutableStateOf("") }
 
     LaunchedEffect(dailyBudget) {
         budgetText = dailyBudget?.toString() ?: ""
+    }
+
+    LaunchedEffect(stepsPerPointCredit) {
+        stepsPerCreditText = stepsPerPointCredit?.toString() ?: ""
+    }
+
+    val activityRecognitionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.setStepSensorEnabled(granted)
+        if (!granted) {
+            Toast.makeText(context, "Activity recognition permission required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val hcPermissionLauncher = rememberLauncherForActivityResult(
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        val ok = granted.containsAll(HealthConnectStepReader.REQUIRED_PERMISSIONS)
+        viewModel.setHealthConnectEnabled(ok)
+        if (!ok) {
+            Toast.makeText(context, "Health Connect permission required", Toast.LENGTH_SHORT).show()
+        }
     }
 
     val totalEntries = allMeals.size + allSymptoms.size + allMedications.size + allOtherEntries.size
@@ -203,6 +234,162 @@ fun SettingsScreen(
                 enabled = budgetText.toIntOrNull() != null || (budgetText.isEmpty() && dailyBudget != null)
             ) {
                 Text(if (budgetText.isEmpty() && dailyBudget != null) "Clear Budget" else "Save Budget")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = stepsPerCreditText,
+                onValueChange = { newVal ->
+                    if (newVal.isEmpty() || newVal.all { it.isDigit() }) {
+                        stepsPerCreditText = newVal
+                    }
+                },
+                label = { Text("Steps per point credit") },
+                placeholder = { Text("e.g., 100") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { viewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) }
+                ),
+                supportingText = { Text("How many steps earn one credit. Leave blank to disable.") }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = { viewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = stepsPerCreditText.toIntOrNull()?.let { it > 0 } == true ||
+                    (stepsPerCreditText.isEmpty() && stepsPerPointCredit != null)
+            ) {
+                Text(
+                    if (stepsPerCreditText.isEmpty() && stepsPerPointCredit != null)
+                        "Clear" else "Save"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Step Counting",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Enable step counting",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "Track daily step counts on Home, History, Calendar and charts.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = showStepCounting,
+                            onCheckedChange = { viewModel.setShowStepCounting(it) }
+                        )
+                    }
+
+                    if (showStepCounting) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Use device step sensor",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "Read built-in pedometer when app opens.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = stepSensorEnabled,
+                                onCheckedChange = { wantOn ->
+                                    if (wantOn) {
+                                        activityRecognitionLauncher.launch(
+                                            android.Manifest.permission.ACTIVITY_RECOGNITION
+                                        )
+                                    } else {
+                                        viewModel.setStepSensorEnabled(false)
+                                    }
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Use Health Connect",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "Pull steps from Google Health Connect.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = healthConnectEnabled,
+                                onCheckedChange = { wantOn ->
+                                    if (wantOn) {
+                                        val status = HealthConnectClient.getSdkStatus(context)
+                                        if (status != HealthConnectClient.SDK_AVAILABLE) {
+                                            Toast.makeText(
+                                                context,
+                                                "Install Health Connect to enable.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            viewModel.setHealthConnectEnabled(false)
+                                        } else {
+                                            hcPermissionLauncher.launch(
+                                                HealthConnectStepReader.REQUIRED_PERMISSIONS
+                                            )
+                                        }
+                                    } else {
+                                        viewModel.setHealthConnectEnabled(false)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

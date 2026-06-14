@@ -49,6 +49,7 @@ import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
@@ -59,6 +60,7 @@ import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
 import com.privatehealthjournal.ui.components.SpO2Card
+import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -84,7 +86,8 @@ fun CalendarScreen(
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
     onEditBloodGlucose: (Long) -> Unit = {},
-    onEditCycleEntry: (Long) -> Unit = {}
+    onEditCycleEntry: (Long) -> Unit = {},
+    onEditStepCount: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -97,6 +100,8 @@ fun CalendarScreen(
     val allBloodGlucose by viewModel.allBloodGlucoseEntries.collectAsState()
     val allCycleEntries by viewModel.allCycleEntries.collectAsState()
     val showCycleTracking by viewModel.showCycleTracking.collectAsState()
+    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
+    val showStepCounting by viewModel.showStepCounting.collectAsState()
 
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -104,7 +109,7 @@ fun CalendarScreen(
     val zone = ZoneId.systemDefault()
 
     // Group entries by date
-    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight, allSpO2, allBloodGlucose, allCycleEntries, showCycleTracking) {
+    val entriesByDate = remember(allMeals, allSymptoms, allMedications, allOtherEntries, allBloodPressure, allCholesterol, allWeight, allSpO2, allBloodGlucose, allCycleEntries, showCycleTracking, allStepCountEntries, showStepCounting) {
         val map = mutableMapOf<LocalDate, MutableList<CalendarEntry>>()
 
         allMeals.forEach { meal ->
@@ -149,6 +154,12 @@ fun CalendarScreen(
                 map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.Cycle(cycle))
             }
         }
+        if (showStepCounting) {
+            allStepCountEntries.forEach { step ->
+                val date = LocalDate.ofEpochDay(step.dateEpochDay)
+                map.getOrPut(date) { mutableListOf() }.add(CalendarEntry.StepCount(step))
+            }
+        }
 
         map
     }
@@ -171,6 +182,7 @@ fun CalendarScreen(
                 is CalendarEntry.SpO2 -> it.entry.timestamp
                 is CalendarEntry.BloodGlucose -> it.entry.timestamp
                 is CalendarEntry.Cycle -> it.entry.timestamp
+                is CalendarEntry.StepCount -> it.entry.timestamp
             }
         }
         ?: emptyList()
@@ -304,6 +316,11 @@ fun CalendarScreen(
                                 entry = entry.entry,
                                 onDelete = { viewModel.deleteCycleEntry(entry.entry) },
                                 onEdit = { onEditCycleEntry(entry.entry.id) }
+                            )
+                            is CalendarEntry.StepCount -> StepCountCard(
+                                entry = entry.entry,
+                                onDelete = { viewModel.deleteStepCount(entry.entry) },
+                                onEdit = { onEditStepCount(entry.entry.id) }
                             )
                         }
                     }
@@ -484,4 +501,5 @@ private sealed class CalendarEntry {
     data class SpO2(val entry: SpO2Entry) : CalendarEntry()
     data class BloodGlucose(val entry: BloodGlucoseEntry) : CalendarEntry()
     data class Cycle(val entry: CycleEntry) : CalendarEntry()
+    data class StepCount(val entry: StepCountEntry) : CalendarEntry()
 }

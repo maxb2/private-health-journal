@@ -18,6 +18,7 @@ import com.privatehealthjournal.data.dao.MedicationSetLogDao
 import com.privatehealthjournal.data.dao.MedicationSetReminderDao
 import com.privatehealthjournal.data.dao.OtherEntryDao
 import com.privatehealthjournal.data.dao.SpO2Dao
+import com.privatehealthjournal.data.dao.StepCountDao
 import com.privatehealthjournal.data.dao.SymptomEntryDao
 import com.privatehealthjournal.data.dao.WeightDao
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
@@ -35,6 +36,7 @@ import com.privatehealthjournal.data.entity.MedicationSetLog
 import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -58,9 +60,10 @@ import com.privatehealthjournal.data.entity.WeightEntry
         MedicationSetItem::class,
         MedicationSetReminder::class,
         MedicationSetLog::class,
-        CycleEntry::class
+        CycleEntry::class,
+        StepCountEntry::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -78,6 +81,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun medicationSetReminderDao(): MedicationSetReminderDao
     abstract fun medicationSetLogDao(): MedicationSetLogDao
     abstract fun cycleEntryDao(): CycleEntryDao
+    abstract fun stepCountDao(): StepCountDao
 
     companion object {
         @Volatile
@@ -166,6 +170,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `step_count_entries` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `dateEpochDay` INTEGER NOT NULL,
+                        `steps` INTEGER NOT NULL,
+                        `source` TEXT NOT NULL,
+                        `notes` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_step_count_entries_dateEpochDay` ON `step_count_entries` (`dateEpochDay`)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -173,7 +193,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "private_health_journal_database"
                 )
-                    .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                    .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

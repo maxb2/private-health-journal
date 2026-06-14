@@ -40,6 +40,7 @@ import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
@@ -50,6 +51,7 @@ import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
 import com.privatehealthjournal.ui.components.SpO2Card
+import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -76,7 +78,8 @@ fun HistoryScreen(
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
     onEditBloodGlucose: (Long) -> Unit = {},
-    onEditCycleEntry: (Long) -> Unit = {}
+    onEditCycleEntry: (Long) -> Unit = {},
+    onEditStepCount: (Long) -> Unit = {}
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allSymptoms by viewModel.allSymptomEntries.collectAsState()
@@ -89,6 +92,8 @@ fun HistoryScreen(
     val allBloodGlucose by viewModel.allBloodGlucoseEntries.collectAsState()
     val allCycleEntries by viewModel.allCycleEntries.collectAsState()
     val showCycleTracking by viewModel.showCycleTracking.collectAsState()
+    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
+    val showStepCounting by viewModel.showStepCounting.collectAsState()
     var filterType by remember { mutableStateOf(FilterType.ALL) }
 
     Scaffold(
@@ -176,7 +181,8 @@ fun HistoryScreen(
                             allWeight.map { HistoryEntry.Weight(it) } +
                             allSpO2.map { HistoryEntry.SpO2(it) } +
                             allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
-                            (if (showCycleTracking) allCycleEntries.map { HistoryEntry.Cycle(it) } else emptyList()))
+                            (if (showCycleTracking) allCycleEntries.map { HistoryEntry.Cycle(it) } else emptyList()) +
+                            (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
                         .sortedByDescending { it.timestamp }
                 }
                 FilterType.MEALS -> allMeals.map { HistoryEntry.Meal(it) }
@@ -192,7 +198,8 @@ fun HistoryScreen(
                             allCholesterol.map { HistoryEntry.Cholesterol(it) } +
                             allWeight.map { HistoryEntry.Weight(it) } +
                             allSpO2.map { HistoryEntry.SpO2(it) } +
-                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) })
+                            allBloodGlucose.map { HistoryEntry.BloodGlucose(it) } +
+                            (if (showStepCounting) allStepCountEntries.map { HistoryEntry.StepCount(it) } else emptyList()))
                         .sortedByDescending { it.timestamp }
                 }
                 FilterType.CYCLE -> allCycleEntries.map { HistoryEntry.Cycle(it) }
@@ -311,6 +318,11 @@ fun HistoryScreen(
                                     onDelete = { viewModel.deleteCycleEntry(entry.entry) },
                                     onEdit = { onEditCycleEntry(entry.entry.id) }
                                 )
+                                is HistoryEntry.StepCount -> StepCountCard(
+                                    entry = entry.entry,
+                                    onDelete = { viewModel.deleteStepCount(entry.entry) },
+                                    onEdit = { onEditStepCount(entry.entry.id) }
+                                )
                             }
                         }
                     }
@@ -361,5 +373,13 @@ private sealed class HistoryEntry {
 
     data class Cycle(val entry: CycleEntry) : HistoryEntry() {
         override val timestamp: Long = entry.timestamp
+    }
+
+    data class StepCount(val entry: StepCountEntry) : HistoryEntry() {
+        override val timestamp: Long =
+            LocalDate.ofEpochDay(entry.dateEpochDay)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
     }
 }

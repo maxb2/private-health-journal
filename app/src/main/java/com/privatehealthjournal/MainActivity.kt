@@ -30,6 +30,7 @@ import com.privatehealthjournal.ui.screens.AddMedicationScreen
 import com.privatehealthjournal.ui.screens.AddMedicationSetScreen
 import com.privatehealthjournal.ui.screens.AddOtherEntryScreen
 import com.privatehealthjournal.ui.screens.AddSpO2Screen
+import com.privatehealthjournal.ui.screens.AddStepCountScreen
 import com.privatehealthjournal.ui.screens.AddSymptomScreen
 import com.privatehealthjournal.ui.screens.AddWeightScreen
 import com.privatehealthjournal.ui.screens.BiometricsChartScreen
@@ -41,8 +42,18 @@ import com.privatehealthjournal.ui.screens.MealBudgetScreen
 import com.privatehealthjournal.ui.screens.MedicationSetsScreen
 import com.privatehealthjournal.ui.screens.SettingsScreen
 import com.privatehealthjournal.notification.ReminderBroadcastReceiver
+import com.privatehealthjournal.sensor.StepSync
 import com.privatehealthjournal.ui.theme.PrivateHealthJournalTheme
 import com.privatehealthjournal.viewmodel.LogViewModel
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
+import com.privatehealthjournal.data.AppDatabase
+import com.privatehealthjournal.data.repository.LogRepository
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -50,10 +61,23 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _: Boolean -> }
 
+    private lateinit var stepSync: StepSync
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
         requestNotificationPermission()
+
+        val db = AppDatabase.getDatabase(applicationContext)
+        val syncRepo = LogRepository(
+            db.mealDao(), db.symptomEntryDao(), db.bowelMovementDao(),
+            db.medicationDao(), db.otherEntryDao(), db.bloodPressureDao(),
+            db.cholesterolDao(), db.weightDao(), db.spO2Dao(),
+            db.bloodGlucoseDao(), db.medicationSetDao(),
+            db.medicationSetReminderDao(), db.medicationSetLogDao(),
+            db.cycleEntryDao(), db.stepCountDao()
+        )
+        stepSync = StepSync.create(applicationContext, syncRepo)
 
         val navigateTo = intent?.getStringExtra("navigate_to")
 
@@ -65,6 +89,17 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val viewModel: LogViewModel = viewModel()
+                    val lifecycleOwner = LocalLifecycleOwner.current
+
+                    DisposableEffect(lifecycleOwner) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            if (event == Lifecycle.Event.ON_RESUME) {
+                                lifecycleScope.launch { stepSync.syncOnResume() }
+                            }
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                    }
 
                     LaunchedEffect(navigateTo) {
                         if (navigateTo != null) {
@@ -94,6 +129,7 @@ class MainActivity : ComponentActivity() {
                                 onAddWeight = { navController.navigate("add_weight") },
                                 onAddSpO2 = { navController.navigate("add_spo2") },
                                 onAddBloodGlucose = { navController.navigate("add_blood_glucose") },
+                                onAddStepCount = { navController.navigate("add_step_count") },
                                 onViewBiometricsChart = { navController.navigate("biometrics_chart") },
                                 onViewHistory = { navController.navigate("history") },
                                 onViewCalendar = { navController.navigate("calendar") },
@@ -107,6 +143,7 @@ class MainActivity : ComponentActivity() {
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
                                 onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
+                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") },
                                 onViewMedicationSets = { navController.navigate("medication_sets") },
                                 onViewMealBudget = { navController.navigate("meal_budget") },
                                 onViewCycleTracking = { navController.navigate("cycle_tracking") },
@@ -235,7 +272,8 @@ class MainActivity : ComponentActivity() {
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
                                 onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") }
+                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") },
+                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") }
                             )
                         }
                         composable("history") {
@@ -251,7 +289,8 @@ class MainActivity : ComponentActivity() {
                                 onEditWeight = { id -> navController.navigate("edit_weight/$id") },
                                 onEditSpO2 = { id -> navController.navigate("edit_spo2/$id") },
                                 onEditBloodGlucose = { id -> navController.navigate("edit_blood_glucose/$id") },
-                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") }
+                                onEditCycleEntry = { id -> navController.navigate("edit_cycle_entry/$id") },
+                                onEditStepCount = { id -> navController.navigate("edit_step_count/$id") }
                             )
                         }
                         composable("cycle_tracking") {
@@ -402,6 +441,23 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = bloodGlucoseId
+                            )
+                        }
+                        composable("add_step_count") {
+                            AddStepCountScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(
+                            route = "edit_step_count/{stepCountId}",
+                            arguments = listOf(navArgument("stepCountId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val stepCountId = backStackEntry.arguments?.getLong("stepCountId")
+                            AddStepCountScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                editId = stepCountId
                             )
                         }
                     }

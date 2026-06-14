@@ -30,6 +30,7 @@ import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -648,6 +649,102 @@ fun CholesterolSummaryCard(entries: List<CholesterolEntry>) {
             SummaryItem("Latest", latest?.total?.toString() ?: "-"),
             SummaryItem("Min", min?.total?.toString() ?: "-"),
             SummaryItem("Max", max?.total?.toString() ?: "-"),
+            SummaryItem("Avg", "%.0f".format(avg))
+        )
+    )
+}
+
+@Composable
+fun StepCountChart(
+    entries: List<StepCountEntry>,
+    modifier: Modifier = Modifier
+) {
+    if (entries.isEmpty()) {
+        EmptyChartState("No step data to display")
+        return
+    }
+
+    val sortedEntries = remember(entries) { entries.sortedBy { it.dateEpochDay } }
+    val chartColor = MaterialTheme.colorScheme.primary
+    val msPerDay = 24 * 60 * 60 * 1000L
+
+    val minDay = remember(sortedEntries) { sortedEntries.minOf { it.dateEpochDay } }
+
+    val chartEntryModelProducer = remember(sortedEntries) {
+        ChartEntryModelProducer(
+            sortedEntries.map { entry ->
+                val dayOffset = (entry.dateEpochDay - minDay).toFloat()
+                entryOf(dayOffset, entry.steps.toFloat())
+            }
+        )
+    }
+
+    val lineSpec = remember(chartColor) {
+        listOf(
+            LineChart.LineSpec(
+                lineColor = chartColor.toArgb(),
+                lineBackgroundShader = DynamicShaders.fromBrush(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(
+                            chartColor.copy(alpha = 0.4f),
+                            chartColor.copy(alpha = 0f)
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    val bottomAxisFormatter = remember(minDay) {
+        AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+            val epochDay = minDay + value.toLong()
+            formatDateForAxis(epochDay * msPerDay)
+        }
+    }
+
+    val startAxisFormatter = remember {
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _ ->
+            "%.0f".format(value)
+        }
+    }
+
+    val axisLabelComponent = textComponent(
+        color = MaterialTheme.colorScheme.onSurface,
+        textSize = 9.sp,
+        typeface = Typeface.DEFAULT
+    )
+
+    Chart(
+        chart = lineChart(lines = lineSpec),
+        chartModelProducer = chartEntryModelProducer,
+        startAxis = rememberStartAxis(valueFormatter = startAxisFormatter),
+        bottomAxis = rememberBottomAxis(
+            label = axisLabelComponent,
+            valueFormatter = bottomAxisFormatter,
+            tickLength = 4.dp,
+            itemPlacer = AxisItemPlacer.Horizontal.default(spacing = 3)
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
+}
+
+@Composable
+fun StepCountSummaryCard(entries: List<StepCountEntry>) {
+    if (entries.isEmpty()) return
+
+    val latest = entries.maxByOrNull { it.dateEpochDay }
+    val min = entries.minByOrNull { it.steps }
+    val max = entries.maxByOrNull { it.steps }
+    val avg = entries.map { it.steps }.average()
+
+    SummaryCard(
+        title = "Step Summary",
+        items = listOf(
+            SummaryItem("Latest", latest?.let { "${it.steps}" } ?: "-"),
+            SummaryItem("Min", min?.let { "${it.steps}" } ?: "-"),
+            SummaryItem("Max", max?.let { "${it.steps}" } ?: "-"),
             SummaryItem("Avg", "%.0f".format(avg))
         )
     )

@@ -12,6 +12,7 @@ import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.google.gson.GsonBuilder
@@ -34,7 +35,8 @@ object DataExporter {
         medicationSets: List<MedicationSetWithItems> = emptyList(),
         remindersBySetId: Map<Long, List<MedicationSetReminder>> = emptyMap(),
         logsBySetId: Map<Long, List<MedicationSetLog>> = emptyMap(),
-        cycleEntries: List<CycleEntry> = emptyList()
+        cycleEntries: List<CycleEntry> = emptyList(),
+        stepCountEntries: List<StepCountEntry> = emptyList()
     ): String {
         val exportData = ExportData(
             meals = meals.map { meal ->
@@ -152,6 +154,15 @@ object DataExporter {
                 ExportedCycleEntry(
                     flow = entry.flow.name,
                     symptoms = entry.symptoms,
+                    notes = entry.notes,
+                    timestamp = entry.timestamp
+                )
+            },
+            stepCountEntries = stepCountEntries.map { entry ->
+                ExportedStepCount(
+                    dateEpochDay = entry.dateEpochDay,
+                    steps = entry.steps,
+                    source = entry.source.name,
                     notes = entry.notes,
                     timestamp = entry.timestamp
                 )
