@@ -53,7 +53,8 @@ class LogRepository(
     private val medicationSetReminderDao: MedicationSetReminderDao,
     private val medicationSetLogDao: MedicationSetLogDao,
     private val cycleEntryDao: CycleEntryDao,
-    private val stepCountDao: StepCountDao
+    private val stepCountDao: StepCountDao,
+    private val transaction: suspend (suspend () -> Unit) -> Unit = { block -> block() }
 ) {
     val allMeals: Flow<List<MealWithDetails>> = mealDao.getAllMealsWithDetails()
     val allSymptomEntries: Flow<List<SymptomEntry>> = symptomEntryDao.getAllSymptomEntries()
@@ -369,6 +370,34 @@ class LogRepository(
 
     fun getAllMedicationSetLogs(): Flow<List<MedicationSetLog>> =
         medicationSetLogDao.getAllLogs()
+
+    /**
+     * Insert one MedicationEntry per item plus the set-log row atomically. Either everything
+     * commits or nothing does, so a crash mid-loop can't leave orphan MedicationEntries with
+     * no MedicationSetLog (which would let the reminder fire again the same day).
+     */
+    suspend fun logMedicationSetAtomically(
+        setId: Long,
+        items: List<MedicationSetItemSpec>,
+        timestamp: Long,
+        notes: String
+    ) {
+        transaction {
+            items.forEach { item ->
+                medicationDao.insert(
+                    MedicationEntry(
+                        name = item.name,
+                        dosage = item.dosage,
+                        notes = notes,
+                        timestamp = timestamp
+                    )
+                )
+            }
+            medicationSetLogDao.insert(MedicationSetLog(setId = setId, timestamp = timestamp))
+        }
+    }
+
+    data class MedicationSetItemSpec(val name: String, val dosage: String)
 
     // Cycle Entry methods
     suspend fun insertCycleEntry(entry: CycleEntry): Long = cycleEntryDao.insert(entry)

@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.privatehealthjournal.data.AppDatabase
 import com.privatehealthjournal.data.export.DataExporter
 import com.privatehealthjournal.data.export.DataImporter
@@ -41,7 +42,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -109,7 +112,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.medicationSetReminderDao(),
             database.medicationSetLogDao(),
             database.cycleEntryDao(),
-            database.stepCountDao()
+            database.stepCountDao(),
+            transaction = { block -> database.withTransaction { block() } }
         )
 
         allMeals = repository.allMeals
@@ -762,18 +766,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val timestamp = System.currentTimeMillis()
             val notes = "Logged from set: ${setWithItems.set.name}"
-            setWithItems.items.forEach { item ->
-                repository.insertMedication(
-                    MedicationEntry(
-                        name = item.name,
-                        dosage = item.dosage,
-                        notes = notes,
-                        timestamp = timestamp
-                    )
-                )
-            }
-            repository.insertMedicationSetLog(
-                MedicationSetLog(setId = setWithItems.set.id, timestamp = timestamp)
+            repository.logMedicationSetAtomically(
+                setId = setWithItems.set.id,
+                items = setWithItems.items.map {
+                    LogRepository.MedicationSetItemSpec(it.name, it.dosage)
+                },
+                timestamp = timestamp,
+                notes = notes
             )
             // Dismiss any pending notification for this set
             ReminderScheduler.dismissNotification(getApplication(), setWithItems.set.id)
@@ -811,34 +810,56 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun exportData(uri: Uri, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
+                // Read fresh from the repository Flows. The StateFlow mirrors use
+                // SharingStarted.Lazily, so they may still be empty if no screen has
+                // subscribed before the user triggers an export.
+                val meals = repository.allMeals.first()
+                val symptoms = repository.allSymptomEntries.first()
+                val bowelMovements = repository.allBowelMovements.first()
+                val medications = repository.allMedications.first()
+                val otherEntries = repository.allOtherEntries.first()
+                val bloodPressure = repository.allBloodPressureEntries.first()
+                val cholesterol = repository.allCholesterolEntries.first()
+                val weight = repository.allWeightEntries.first()
+                val spO2 = repository.allSpO2Entries.first()
+                val bloodGlucose = repository.allBloodGlucoseEntries.first()
+                val medicationSets = repository.allMedicationSets.first()
+                val cycleEntries = repository.allCycleEntries.first()
+                val stepCountEntries = repository.allStepCountEntries.first()
+                val remindersBySetId = repository.getAllReminders().first()
+                    .groupBy { it.setId }
                 val logsBySetId = repository.getAllMedicationSetLogs().first()
                     .groupBy { it.setId }
-                val json = DataExporter.export(
-                    meals = allMeals.value,
-                    symptoms = allSymptomEntries.value,
-                    bowelMovements = allBowelMovements.value,
-                    medications = allMedications.value,
-                    otherEntries = allOtherEntries.value,
-                    bloodPressureEntries = allBloodPressureEntries.value,
-                    cholesterolEntries = allCholesterolEntries.value,
-                    weightEntries = allWeightEntries.value,
-                    spO2Entries = allSpO2Entries.value,
-                    bloodGlucoseEntries = allBloodGlucoseEntries.value,
-                    medicationSets = allMedicationSets.value,
-                    remindersBySetId = allRemindersBySet.value,
-                    logsBySetId = logsBySetId,
-                    cycleEntries = allCycleEntries.value,
-                    stepCountEntries = allStepCountEntries.value
-                )
-                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
-                    stream.write(json.toByteArray())
+
+                val json = withContext(Dispatchers.IO) {
+                    DataExporter.export(
+                        meals = meals,
+                        symptoms = symptoms,
+                        bowelMovements = bowelMovements,
+                        medications = medications,
+                        otherEntries = otherEntries,
+                        bloodPressureEntries = bloodPressure,
+                        cholesterolEntries = cholesterol,
+                        weightEntries = weight,
+                        spO2Entries = spO2,
+                        bloodGlucoseEntries = bloodGlucose,
+                        medicationSets = medicationSets,
+                        remindersBySetId = remindersBySetId,
+                        logsBySetId = logsBySetId,
+                        cycleEntries = cycleEntries,
+                        stepCountEntries = stepCountEntries
+                    )
                 }
-                val total = allMeals.value.size + allSymptomEntries.value.size +
-                    allBowelMovements.value.size +
-                    allMedications.value.size + allOtherEntries.value.size +
-                    allBloodPressureEntries.value.size + allCholesterolEntries.value.size +
-                    allWeightEntries.value.size + allSpO2Entries.value.size +
-                    allBloodGlucoseEntries.value.size
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openOutputStream(uri)
+                        ?.use { stream -> stream.write(json.toByteArray()) }
+                        ?: throw IllegalStateException("Could not open output stream")
+                }
+                val total = meals.size + symptoms.size + bowelMovements.size +
+                    medications.size + otherEntries.size +
+                    bloodPressure.size + cholesterol.size + weight.size + spO2.size +
+                    bloodGlucose.size + medicationSets.size +
+                    cycleEntries.size + stepCountEntries.size
                 onResult(true, "Exported $total entries successfully")
             } catch (e: Exception) {
                 onResult(false, "Export failed: ${e.message}")
@@ -849,8 +870,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun importData(uri: Uri, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                val json = getApplication<Application>().contentResolver.openInputStream(uri)?.use { stream ->
-                    stream.bufferedReader().readText()
+                val json = withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { stream ->
+                        readJsonCapped(stream, MAX_IMPORT_BYTES)
+                    }
                 } ?: run {
                     onResult(false, "Could not read file")
                     return@launch
@@ -861,18 +884,52 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                         if (result.medicationSetRemindersImported > 0) {
                             ReminderScheduler.rescheduleAllReminders(getApplication())
                         }
-                        onResult(true, "Imported ${result.totalImported} entries: " +
-                            "${result.mealsImported} meals, ${result.symptomsImported} symptoms, " +
-                            "${result.bowelMovementsImported} bowel movements, " +
-                            "${result.medicationsImported} medications, ${result.otherEntriesImported} other")
+                        val parts = buildList {
+                            add("${result.mealsImported} meals")
+                            add("${result.symptomsImported} symptoms")
+                            add("${result.bowelMovementsImported} bowel movements")
+                            add("${result.medicationsImported} medications")
+                            add("${result.otherEntriesImported} other")
+                            add("${result.bloodPressureImported} BP")
+                            add("${result.cholesterolImported} cholesterol")
+                            add("${result.weightImported} weight")
+                            add("${result.spO2Imported} SpO2")
+                            add("${result.bloodGlucoseImported} glucose")
+                            add("${result.medicationSetsImported} med sets")
+                            add("${result.cycleEntriesImported} cycle")
+                            add("${result.stepCountEntriesImported} steps")
+                        }
+                        onResult(true, "Imported ${result.totalImported} entries: " + parts.joinToString(", "))
                     }
                     is ImportResult.Error -> {
                         onResult(false, result.message)
                     }
                 }
+            } catch (e: ImportTooLargeException) {
+                onResult(false, "Import file too large (max ${MAX_IMPORT_BYTES / 1024 / 1024} MB)")
             } catch (e: Exception) {
                 onResult(false, "Import failed: ${e.message}")
             }
         }
+    }
+
+    private class ImportTooLargeException : RuntimeException()
+
+    private fun readJsonCapped(stream: java.io.InputStream, max: Long): String {
+        val out = java.io.ByteArrayOutputStream()
+        val buf = ByteArray(8 * 1024)
+        var total = 0L
+        while (true) {
+            val read = stream.read(buf)
+            if (read == -1) break
+            total += read
+            if (total > max) throw ImportTooLargeException()
+            out.write(buf, 0, read)
+        }
+        return out.toString(Charsets.UTF_8.name())
+    }
+
+    companion object {
+        private const val MAX_IMPORT_BYTES: Long = 50L * 1024 * 1024
     }
 }
