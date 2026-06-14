@@ -51,6 +51,7 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 import java.time.DayOfWeek
 import java.time.Instant
@@ -68,8 +69,17 @@ fun MealBudgetScreen(
 ) {
     val allMeals by viewModel.allMeals.collectAsState()
     val allOtherEntries by viewModel.allOtherEntries.collectAsState()
+    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
+    val stepsPerPointCredit by viewModel.stepsPerPointCredit.collectAsState()
     val dailyBudgetState by viewModel.dailyBudget.collectAsState()
     val dailyBudget = dailyBudgetState
+
+    fun stepCreditsForDay(day: LocalDate): Int {
+        val divisor = stepsPerPointCredit ?: return 0
+        if (divisor <= 0) return 0
+        val entry = allStepCountEntries.firstOrNull { it.dateEpochDay == day.toEpochDay() } ?: return 0
+        return entry.steps / divisor
+    }
 
     var weekOffset by remember { mutableIntStateOf(0) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
@@ -91,7 +101,8 @@ fun MealBudgetScreen(
 
     val weeklyMealPoints = weekMeals.sumOf { it.meal.pointCost ?: 0 }
     val weeklyExerciseCredits = weekExercise.sumOf { it.pointCredit ?: 0 }
-    val netWeeklyPoints = weeklyMealPoints - weeklyExerciseCredits
+    val weeklyStepCredits = (0..6).sumOf { stepCreditsForDay(weekStart.plusDays(it.toLong())) }
+    val netWeeklyPoints = weeklyMealPoints - weeklyExerciseCredits - weeklyStepCredits
 
     val weeklyBudget = (dailyBudget ?: 0) * 8
     val weeklyRemaining = weeklyBudget - netWeeklyPoints
@@ -108,7 +119,8 @@ fun MealBudgetScreen(
         val dayExercisePts = allOtherEntries
             .filter { it.entryType == OtherEntryType.EXERCISE && it.timestamp in dayStartMs until dayEndMs }
             .sumOf { it.pointCredit ?: 0 }
-        maxOf(0, dayMealPts - dayExercisePts - (dailyBudget ?: 0))
+        val dayStepPts = stepCreditsForDay(day)
+        maxOf(0, dayMealPts - dayExercisePts - dayStepPts - (dailyBudget ?: 0))
     }
 
     val headerFormatter = DateTimeFormatter.ofPattern("MMM d")
@@ -192,6 +204,7 @@ fun MealBudgetScreen(
                 netWeeklyPoints = netWeeklyPoints,
                 weeklyMealPoints = weeklyMealPoints,
                 weeklyExerciseCredits = weeklyExerciseCredits,
+                weeklyStepCredits = weeklyStepCredits,
                 weeklyRemaining = weeklyRemaining,
                 overageUsed = overageUsed
             )
@@ -218,7 +231,9 @@ fun MealBudgetScreen(
                 }
                 val dayMealPoints = dayMeals.sumOf { it.meal.pointCost ?: 0 }
                 val dayExerciseCredits = dayExercise.sumOf { it.pointCredit ?: 0 }
-                val dayNet = dayMealPoints - dayExerciseCredits
+                val dayStepEntry = allStepCountEntries.firstOrNull { it.dateEpochDay == day.toEpochDay() }
+                val dayStepCredits = stepCreditsForDay(day)
+                val dayNet = dayMealPoints - dayExerciseCredits - dayStepCredits
                 val isExpanded = selectedDay == day
 
                 DayRow(
@@ -230,6 +245,8 @@ fun MealBudgetScreen(
                     isExpanded = isExpanded,
                     dayMeals = dayMeals,
                     dayExercise = dayExercise,
+                    dayStepEntry = dayStepEntry,
+                    dayStepCredits = dayStepCredits,
                     dayFormatter = dayFormatter,
                     onClick = {
                         selectedDay = if (isExpanded) null else day
@@ -283,6 +300,7 @@ private fun WeeklySummaryCard(
     netWeeklyPoints: Int,
     weeklyMealPoints: Int,
     weeklyExerciseCredits: Int,
+    weeklyStepCredits: Int,
     weeklyRemaining: Int,
     overageUsed: Int
 ) {
@@ -338,9 +356,14 @@ private fun WeeklySummaryCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
-            if (weeklyExerciseCredits > 0) {
+            if (weeklyExerciseCredits > 0 || weeklyStepCredits > 0) {
+                val parts = buildList {
+                    add("Meal pts: $weeklyMealPoints")
+                    if (weeklyExerciseCredits > 0) add("Exercise credits: −$weeklyExerciseCredits")
+                    if (weeklyStepCredits > 0) add("Step credits: −$weeklyStepCredits")
+                }
                 Text(
-                    text = "Meal pts: $weeklyMealPoints  |  Exercise credits: −$weeklyExerciseCredits",
+                    text = parts.joinToString("  |  "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -370,12 +393,14 @@ private fun DayRow(
     isExpanded: Boolean,
     dayMeals: List<MealWithDetails>,
     dayExercise: List<OtherEntry>,
+    dayStepEntry: StepCountEntry?,
+    dayStepCredits: Int,
     dayFormatter: DateTimeFormatter,
     onClick: () -> Unit
 ) {
     val progress = if (dailyBudget > 0) (dayNet.toFloat() / dailyBudget).coerceIn(0f, 1f) else 0f
     val isOver = dayNet > dailyBudget
-    val hasItems = dayMeals.isNotEmpty() || dayExercise.isNotEmpty()
+    val hasItems = dayMeals.isNotEmpty() || dayExercise.isNotEmpty() || dayStepCredits > 0
     val barColor = when {
         isFuture -> Color.Transparent
         isOver -> MaterialTheme.colorScheme.error
@@ -498,6 +523,41 @@ private fun DayRow(
                                 fontWeight = FontWeight.Medium,
                                 color = if (meal.pointCost != null) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        }
+                    }
+
+                    if (dayStepEntry != null && dayStepCredits > 0) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.DirectionsRun,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Steps",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${dayStepEntry.steps} steps",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            Text(
+                                text = "−$dayStepCredits pts",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF4CAF50)
                             )
                         }
                     }

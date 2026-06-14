@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
@@ -61,6 +62,7 @@ import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.ui.components.BloodGlucoseCard
@@ -71,6 +73,7 @@ import com.privatehealthjournal.ui.components.MealEntryCard
 import com.privatehealthjournal.ui.components.MedicationCard
 import com.privatehealthjournal.ui.components.OtherEntryCard
 import com.privatehealthjournal.ui.components.SpO2Card
+import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
 import com.privatehealthjournal.viewmodel.LogViewModel
@@ -92,6 +95,7 @@ fun HomeScreen(
     onAddWeight: () -> Unit,
     onAddSpO2: () -> Unit,
     onAddBloodGlucose: () -> Unit,
+    onAddStepCount: () -> Unit = {},
     onViewBiometricsChart: () -> Unit = {},
     onViewHistory: () -> Unit,
     onViewCalendar: () -> Unit = {},
@@ -105,6 +109,7 @@ fun HomeScreen(
     onEditWeight: (Long) -> Unit = {},
     onEditSpO2: (Long) -> Unit = {},
     onEditBloodGlucose: (Long) -> Unit = {},
+    onEditStepCount: (Long) -> Unit = {},
     onViewMedicationSets: () -> Unit = {},
     onViewMealBudget: () -> Unit = {},
     onViewCycleTracking: () -> Unit = {},
@@ -121,6 +126,8 @@ fun HomeScreen(
     val recentBloodGlucose by viewModel.recentBloodGlucoseEntries.collectAsState()
     val recentCycleEntries by viewModel.recentCycleEntries.collectAsState()
     val showCycleTracking by viewModel.showCycleTracking.collectAsState()
+    val recentStepCount by viewModel.recentStepCountEntries.collectAsState()
+    val showStepCounting by viewModel.showStepCounting.collectAsState()
 
     var medsMenuExpanded by remember { mutableStateOf(false) }
     var biometricsMenuExpanded by remember { mutableStateOf(false) }
@@ -313,6 +320,15 @@ fun HomeScreen(
                                 onAddBloodGlucose()
                             }
                         )
+                        if (showStepCounting) {
+                            DropdownMenuItem(
+                                text = { Text("Steps") },
+                                onClick = {
+                                    biometricsMenuExpanded = false
+                                    onAddStepCount()
+                                }
+                            )
+                        }
                         Divider()
                         DropdownMenuItem(
                             text = { Text("View Charts") },
@@ -441,7 +457,8 @@ fun HomeScreen(
                 recentBloodPressure.isEmpty() && recentCholesterol.isEmpty() &&
                 recentWeight.isEmpty() && recentSpO2.isEmpty() &&
                 recentBloodGlucose.isEmpty() &&
-                (!showCycleTracking || recentCycleEntries.isEmpty())
+                (!showCycleTracking || recentCycleEntries.isEmpty()) &&
+                (!showStepCounting || recentStepCount.isEmpty())
 
             if (allEmpty) {
                 Column(
@@ -478,7 +495,8 @@ fun HomeScreen(
                     recentWeight.map { EntryItem.Weight(it) } +
                     recentSpO2.map { EntryItem.SpO2(it) } +
                     recentBloodGlucose.map { EntryItem.BloodGlucose(it) } +
-                    (if (showCycleTracking) recentCycleEntries.map { EntryItem.Cycle(it) } else emptyList())
+                    (if (showCycleTracking) recentCycleEntries.map { EntryItem.Cycle(it) } else emptyList()) +
+                    (if (showStepCounting) recentStepCount.map { EntryItem.StepCount(it) } else emptyList())
                 )
                     .sortedByDescending { it.timestamp }
                     .take(10)
@@ -580,6 +598,11 @@ fun HomeScreen(
                                     onDelete = { viewModel.deleteCycleEntry(item.entry) },
                                     onEdit = { onEditCycleEntry(item.entry.id) }
                                 )
+                                is EntryItem.StepCount -> StepCountCard(
+                                    entry = item.entry,
+                                    onDelete = { viewModel.deleteStepCount(item.entry) },
+                                    onEdit = { onEditStepCount(item.entry.id) }
+                                )
                             }
                         }
                     }
@@ -621,5 +644,12 @@ private sealed class EntryItem {
     }
     data class Cycle(val entry: CycleEntry) : EntryItem() {
         override val timestamp: Long = entry.timestamp
+    }
+    data class StepCount(val entry: StepCountEntry) : EntryItem() {
+        override val timestamp: Long =
+            LocalDate.ofEpochDay(entry.dateEpochDay)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
     }
 }

@@ -98,6 +98,9 @@ dependencies {
     // Charting - Vico
     implementation("com.patrykandpatrick.vico:compose-m3:1.15.0")
 
+    // Health Connect
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")

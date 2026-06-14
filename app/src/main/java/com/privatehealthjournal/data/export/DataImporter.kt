@@ -15,6 +15,8 @@ import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.GlucoseMealContext
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
+import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
@@ -44,6 +46,7 @@ object DataImporter {
             var medicationSetRemindersImported = 0
             var medicationSetLogsImported = 0
             var cycleEntriesImported = 0
+            var stepCountEntriesImported = 0
 
             // Import meals
             exportData.meals.forEach { meal ->
@@ -253,6 +256,25 @@ object DataImporter {
                 cycleEntriesImported++
             }
 
+            // Import step count entries (use upsert — restoring backup is trust-source, bypass merge)
+            exportData.stepCountEntries.forEach { entry ->
+                val source = try {
+                    StepSource.valueOf(entry.source)
+                } catch (e: IllegalArgumentException) {
+                    StepSource.MANUAL
+                }
+                repository.upsertStepCount(
+                    StepCountEntry(
+                        dateEpochDay = entry.dateEpochDay,
+                        steps = entry.steps,
+                        source = source,
+                        notes = entry.notes,
+                        timestamp = entry.timestamp
+                    )
+                )
+                stepCountEntriesImported++
+            }
+
             ImportResult.Success(
                 mealsImported = mealsImported,
                 symptomsImported = symptomsImported,
@@ -267,7 +289,8 @@ object DataImporter {
                 medicationSetsImported = medicationSetsImported,
                 medicationSetRemindersImported = medicationSetRemindersImported,
                 medicationSetLogsImported = medicationSetLogsImported,
-                cycleEntriesImported = cycleEntriesImported
+                cycleEntriesImported = cycleEntriesImported,
+                stepCountEntriesImported = stepCountEntriesImported
             )
         } catch (e: Exception) {
             ImportResult.Error("Failed to import: ${e.message}")
@@ -290,7 +313,8 @@ sealed class ImportResult {
         val medicationSetsImported: Int = 0,
         val medicationSetRemindersImported: Int = 0,
         val medicationSetLogsImported: Int = 0,
-        val cycleEntriesImported: Int = 0
+        val cycleEntriesImported: Int = 0,
+        val stepCountEntriesImported: Int = 0
     ) : ImportResult() {
         val totalImported: Int
             get() = mealsImported + symptomsImported + bowelMovementsImported +
@@ -298,7 +322,7 @@ sealed class ImportResult {
                     bloodPressureImported + cholesterolImported + weightImported + spO2Imported +
                     bloodGlucoseImported + medicationSetsImported +
                     medicationSetRemindersImported + medicationSetLogsImported +
-                    cycleEntriesImported
+                    cycleEntriesImported + stepCountEntriesImported
     }
 
     data class Error(val message: String) : ImportResult()

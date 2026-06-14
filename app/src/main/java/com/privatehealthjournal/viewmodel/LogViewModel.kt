@@ -26,6 +26,8 @@ import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.GlucoseMealContext
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.SpO2Entry
+import com.privatehealthjournal.data.entity.StepCountEntry
+import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.Tag
 import com.privatehealthjournal.data.entity.WeightEntry
@@ -83,6 +85,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val allCycleEntries: StateFlow<List<CycleEntry>>
     val recentCycleEntries: StateFlow<List<CycleEntry>>
     val showCycleTracking: StateFlow<Boolean>
+    val allStepCountEntries: StateFlow<List<StepCountEntry>>
+    val recentStepCountEntries: StateFlow<List<StepCountEntry>>
+    val showStepCounting: StateFlow<Boolean>
+    val stepSensorEnabled: StateFlow<Boolean>
+    val healthConnectEnabled: StateFlow<Boolean>
+    val stepsPerPointCredit: StateFlow<Int?>
 
     init {
         val database = AppDatabase.getDatabase(application)
@@ -100,7 +108,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             database.medicationSetDao(),
             database.medicationSetReminderDao(),
             database.medicationSetLogDao(),
-            database.cycleEntryDao()
+            database.cycleEntryDao(),
+            database.stepCountDao()
         )
 
         allMeals = repository.allMeals
@@ -211,6 +220,24 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         showCycleTracking = AppPreferences.getShowCycleTracking(application)
             .stateIn(viewModelScope, SharingStarted.Lazily, true)
+
+        allStepCountEntries = repository.allStepCountEntries
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        recentStepCountEntries = repository.getRecentStepCountEntries(5)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        showStepCounting = AppPreferences.getShowStepCounting(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+        stepSensorEnabled = AppPreferences.getStepSensorEnabled(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+        healthConnectEnabled = AppPreferences.getHealthConnectEnabled(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+        stepsPerPointCredit = BudgetPreferences.getStepsPerPointCredit(application)
+            .stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
     fun addMeal(
@@ -578,6 +605,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _editingCycleEntry = MutableStateFlow<CycleEntry?>(null)
     val editingCycleEntry: StateFlow<CycleEntry?> = _editingCycleEntry.asStateFlow()
 
+    private val _editingStepCount = MutableStateFlow<StepCountEntry?>(null)
+    val editingStepCount: StateFlow<StepCountEntry?> = _editingStepCount.asStateFlow()
+
     fun loadSymptomForEditing(id: Long) {
         viewModelScope.launch {
             _editingSymptom.value = repository.getSymptomById(id)
@@ -650,6 +680,49 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadStepCountForEditing(id: Long) {
+        viewModelScope.launch {
+            _editingStepCount.value = repository.getStepCountById(id)
+        }
+    }
+
+    // Step count methods
+    fun addStepCount(dateEpochDay: Long, steps: Int, notes: String = "") {
+        viewModelScope.launch {
+            repository.recordStepCount(dateEpochDay, steps, StepSource.MANUAL, notes)
+        }
+    }
+
+    fun updateStepCount(entry: StepCountEntry) {
+        viewModelScope.launch { repository.updateStepCount(entry) }
+    }
+
+    fun deleteStepCount(entry: StepCountEntry) {
+        viewModelScope.launch { repository.deleteStepCount(entry) }
+    }
+
+    fun setShowStepCounting(show: Boolean) {
+        viewModelScope.launch { AppPreferences.setShowStepCounting(getApplication(), show) }
+    }
+
+    fun setStepSensorEnabled(enabled: Boolean) {
+        viewModelScope.launch { AppPreferences.setStepSensorEnabled(getApplication(), enabled) }
+    }
+
+    fun setHealthConnectEnabled(enabled: Boolean) {
+        viewModelScope.launch { AppPreferences.setHealthConnectEnabled(getApplication(), enabled) }
+    }
+
+    fun saveStepsPerPointCredit(value: Int?) {
+        viewModelScope.launch {
+            if (value == null || value <= 0) {
+                BudgetPreferences.clearStepsPerPointCredit(getApplication())
+            } else {
+                BudgetPreferences.setStepsPerPointCredit(getApplication(), value)
+            }
+        }
+    }
+
     fun clearEditingState() {
         _editingSymptom.value = null
         _editingBowelMovement.value = null
@@ -663,6 +736,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         _editingBloodGlucose.value = null
         _editingMedicationSet.value = null
         _editingCycleEntry.value = null
+        _editingStepCount.value = null
     }
 
     // Medication Set methods
@@ -753,7 +827,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     medicationSets = allMedicationSets.value,
                     remindersBySetId = allRemindersBySet.value,
                     logsBySetId = logsBySetId,
-                    cycleEntries = allCycleEntries.value
+                    cycleEntries = allCycleEntries.value,
+                    stepCountEntries = allStepCountEntries.value
                 )
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())

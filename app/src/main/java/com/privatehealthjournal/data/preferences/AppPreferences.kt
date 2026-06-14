@@ -13,11 +13,35 @@ val Context.appDataStore: DataStore<Preferences> by preferencesDataStore(name = 
 
 object AppPreferences {
     val SHOW_CYCLE_TRACKING = booleanPreferencesKey("show_cycle_tracking")
+    val SHOW_STEP_COUNTING = booleanPreferencesKey("show_step_counting")
+    val STEP_SENSOR_ENABLED = booleanPreferencesKey("step_sensor_enabled")
+    val HEALTH_CONNECT_ENABLED = booleanPreferencesKey("health_connect_enabled")
 
     fun getShowCycleTracking(context: Context): Flow<Boolean> =
         context.appDataStore.data.map { prefs -> prefs[SHOW_CYCLE_TRACKING] ?: true }
 
     suspend fun setShowCycleTracking(context: Context, show: Boolean) {
         context.appDataStore.edit { prefs -> prefs[SHOW_CYCLE_TRACKING] = show }
+    }
+
+    fun getShowStepCounting(context: Context): Flow<Boolean> =
+        context.appDataStore.data.map { prefs -> prefs[SHOW_STEP_COUNTING] ?: false }
+
+    suspend fun setShowStepCounting(context: Context, show: Boolean) {
+        context.appDataStore.edit { prefs -> prefs[SHOW_STEP_COUNTING] = show }
+    }
+
+    fun getStepSensorEnabled(context: Context): Flow<Boolean> =
+        context.appDataStore.data.map { prefs -> prefs[STEP_SENSOR_ENABLED] ?: false }
+
+    suspend fun setStepSensorEnabled(context: Context, enabled: Boolean) {
+        context.appDataStore.edit { prefs -> prefs[STEP_SENSOR_ENABLED] = enabled }
+    }
+
+    fun getHealthConnectEnabled(context: Context): Flow<Boolean> =
+        context.appDataStore.data.map { prefs -> prefs[HEALTH_CONNECT_ENABLED] ?: false }
+
+    suspend fun setHealthConnectEnabled(context: Context, enabled: Boolean) {
+        context.appDataStore.edit { prefs -> prefs[HEALTH_CONNECT_ENABLED] = enabled }
     }
 }
