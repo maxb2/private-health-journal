@@ -54,12 +54,12 @@ import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddMealScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null,
     preselectedMealType: String? = null
@@ -100,7 +100,7 @@ fun AddMealScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingMeal()
         onNavigateBack()
     }
 
@@ -443,7 +443,7 @@ fun AddMealScreen(
                                 pointCost = pointCost
                             )
                         }
-                        viewModel.clearEditingState()
+                        viewModel.clearEditingMeal()
                         onNavigateBack()
                     }
                 },

@@ -45,7 +45,11 @@ import com.privatehealthjournal.ui.screens.SettingsScreen
 import com.privatehealthjournal.notification.ReminderBroadcastReceiver
 import com.privatehealthjournal.sensor.StepSync
 import com.privatehealthjournal.ui.theme.PrivateHealthJournalTheme
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
+import com.privatehealthjournal.viewmodel.SettingsViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,11 +57,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
-import androidx.room.withTransaction
-import com.privatehealthjournal.data.AppDatabase
-import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.App
+import com.privatehealthjournal.di.AppViewModelFactory
 import com.privatehealthjournal.ui.nav.NavIntent
 import com.privatehealthjournal.ui.nav.route
+import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -82,17 +86,8 @@ class MainActivity : ComponentActivity() {
         createNotificationChannel()
         requestNotificationPermission()
 
-        val db = AppDatabase.getDatabase(applicationContext)
-        val syncRepo = LogRepository(
-            db.mealDao(), db.symptomEntryDao(), db.bowelMovementDao(),
-            db.medicationDao(), db.otherEntryDao(), db.bloodPressureDao(),
-            db.cholesterolDao(), db.weightDao(), db.spO2Dao(),
-            db.bloodGlucoseDao(), db.medicationSetDao(),
-            db.medicationSetReminderDao(), db.medicationSetLogDao(),
-            db.cycleEntryDao(), db.stepCountDao(),
-            transaction = { block -> db.withTransaction { block() } }
-        )
-        stepSync = StepSync.create(applicationContext, syncRepo)
+        val container = (application as App).container
+        stepSync = StepSync.create(applicationContext, container.stepsRepository)
 
         pendingNavigation.value = intent
             ?.getStringExtra("navigate_to")
@@ -105,7 +100,14 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val viewModel: LogViewModel = viewModel()
+                    val factory = remember(container) {
+                        AppViewModelFactory(container, application)
+                    }
+                    val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
+                    val stepsViewModel: StepsViewModel = viewModel(factory = factory)
+                    val biometricsViewModel: BiometricsViewModel = viewModel(factory = factory)
+                    val medicationViewModel: MedicationViewModel = viewModel(factory = factory)
+                    val journalViewModel: JournalViewModel = viewModel(factory = factory)
                     val lifecycleOwner = LocalLifecycleOwner.current
 
                     DisposableEffect(lifecycleOwner) {
@@ -136,7 +138,13 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable("home") {
-                            HomeScreen(viewModel = viewModel, onNavigate = onNavigate)
+                            HomeScreen(
+                                stepsViewModel = stepsViewModel,
+                                biometricsViewModel = biometricsViewModel,
+                                medicationViewModel = medicationViewModel,
+                                journalViewModel = journalViewModel,
+                                onNavigate = onNavigate,
+                            )
                         }
                         composable(
                             route = "add_meal?mealType={mealType}",
@@ -148,7 +156,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val mealType = backStackEntry.arguments?.getString("mealType")
                             AddMealScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 preselectedMealType = mealType
                             )
@@ -163,7 +171,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val prefillName = backStackEntry.arguments?.getString("name")
                             AddSymptomScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 prefillName = prefillName
                             )
@@ -178,7 +186,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val otherType = backStackEntry.arguments?.getString("type")
                             AddOtherEntryScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 preselectedType = otherType
                             )
@@ -193,69 +201,86 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val prefillName = backStackEntry.arguments?.getString("name")
                             AddMedicationScreen(
-                                viewModel = viewModel,
+                                viewModel = medicationViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 prefillName = prefillName
                             )
                         }
                         composable("add_blood_pressure") {
                             AddBloodPressureScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("add_cholesterol") {
                             AddCholesterolScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("add_weight") {
                             AddWeightScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("add_spo2") {
                             AddSpO2Screen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("add_blood_glucose") {
                             AddBloodGlucoseScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("settings") {
                             SettingsScreen(
-                                viewModel = viewModel,
+                                viewModel = settingsViewModel,
+                                stepsViewModel = stepsViewModel,
+                                medicationViewModel = medicationViewModel,
+                                journalViewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("meal_budget") {
                             MealBudgetScreen(
-                                viewModel = viewModel,
+                                stepsViewModel = stepsViewModel,
+                                journalViewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 onNavigateToSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("biometrics_chart") {
                             BiometricsChartScreen(
-                                viewModel = viewModel,
+                                stepsViewModel = stepsViewModel,
+                                biometricsViewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("calendar") {
-                            CalendarScreen(viewModel = viewModel, onNavigate = onNavigate)
+                            CalendarScreen(
+                                stepsViewModel = stepsViewModel,
+                                biometricsViewModel = biometricsViewModel,
+                                medicationViewModel = medicationViewModel,
+                                journalViewModel = journalViewModel,
+                                onNavigate = onNavigate,
+                            )
                         }
                         composable("history") {
-                            HistoryScreen(viewModel = viewModel, onNavigate = onNavigate)
+                            HistoryScreen(
+                                stepsViewModel = stepsViewModel,
+                                biometricsViewModel = biometricsViewModel,
+                                medicationViewModel = medicationViewModel,
+                                journalViewModel = journalViewModel,
+                                onNavigate = onNavigate,
+                            )
                         }
                         composable("cycle_tracking") {
                             CycleTrackingScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 onAddEntry = { navController.navigate("add_cycle_entry") },
                                 onEditEntry = { id -> navController.navigate("edit_cycle_entry/$id") }
@@ -263,7 +288,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("add_cycle_entry") {
                             AddCycleEntryScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
@@ -273,14 +298,14 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val cycleEntryId = backStackEntry.arguments?.getLong("cycleEntryId")
                             AddCycleEntryScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = cycleEntryId
                             )
                         }
                         composable("medication_sets") {
                             MedicationSetsScreen(
-                                viewModel = viewModel,
+                                viewModel = medicationViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 onAddSet = { navController.navigate("add_medication_set") },
                                 onEditSet = { id -> navController.navigate("edit_medication_set/$id") }
@@ -288,7 +313,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("add_medication_set") {
                             AddMedicationSetScreen(
-                                viewModel = viewModel,
+                                viewModel = medicationViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
@@ -298,7 +323,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val setId = backStackEntry.arguments?.getLong("setId")
                             AddMedicationSetScreen(
-                                viewModel = viewModel,
+                                viewModel = medicationViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = setId
                             )
@@ -310,7 +335,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val mealId = backStackEntry.arguments?.getLong("mealId")
                             AddMealScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = mealId
                             )
@@ -321,7 +346,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val symptomId = backStackEntry.arguments?.getLong("symptomId")
                             AddSymptomScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = symptomId
                             )
@@ -332,7 +357,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val otherEntryId = backStackEntry.arguments?.getLong("otherEntryId")
                             AddOtherEntryScreen(
-                                viewModel = viewModel,
+                                viewModel = journalViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = otherEntryId
                             )
@@ -343,7 +368,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val medicationId = backStackEntry.arguments?.getLong("medicationId")
                             AddMedicationScreen(
-                                viewModel = viewModel,
+                                viewModel = medicationViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = medicationId
                             )
@@ -354,7 +379,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val bloodPressureId = backStackEntry.arguments?.getLong("bloodPressureId")
                             AddBloodPressureScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = bloodPressureId
                             )
@@ -365,7 +390,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val cholesterolId = backStackEntry.arguments?.getLong("cholesterolId")
                             AddCholesterolScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = cholesterolId
                             )
@@ -376,7 +401,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val weightId = backStackEntry.arguments?.getLong("weightId")
                             AddWeightScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = weightId
                             )
@@ -387,7 +412,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val spo2Id = backStackEntry.arguments?.getLong("spo2Id")
                             AddSpO2Screen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = spo2Id
                             )
@@ -398,14 +423,14 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val bloodGlucoseId = backStackEntry.arguments?.getLong("bloodGlucoseId")
                             AddBloodGlucoseScreen(
-                                viewModel = viewModel,
+                                viewModel = biometricsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = bloodGlucoseId
                             )
                         }
                         composable("add_step_count") {
                             AddStepCountScreen(
-                                viewModel = viewModel,
+                                viewModel = stepsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
@@ -415,7 +440,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val stepCountId = backStackEntry.arguments?.getLong("stepCountId")
                             AddStepCountScreen(
-                                viewModel = viewModel,
+                                viewModel = stepsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 editId = stepCountId
                             )

@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
 
 private data class MedItemState(
     var name: String = "",
@@ -54,7 +54,7 @@ private data class MedItemState(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddMedicationSetScreen(
-    viewModel: LogViewModel,
+    viewModel: MedicationViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -82,7 +82,7 @@ fun AddMedicationSetScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingMedicationSet()
         onNavigateBack()
     }
 
@@ -238,7 +238,7 @@ fun AddMedicationSetScreen(
                     } else {
                         viewModel.addMedicationSet(setName.trim(), validItems)
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingMedicationSet()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

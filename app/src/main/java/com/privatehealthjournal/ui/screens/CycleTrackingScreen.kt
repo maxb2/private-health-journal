@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.CycleSymptom
 import com.privatehealthjournal.data.entity.FlowIntensity
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -92,7 +92,7 @@ private fun groupIntoPeriods(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CycleTrackingScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     onAddEntry: () -> Unit,
     onEditEntry: (Long) -> Unit

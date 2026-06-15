@@ -2,7 +2,7 @@ package com.privatehealthjournal.sensor
 
 import android.content.Context
 import android.util.Log
-import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.data.repository.StepsRepository
 
 class StepSync(
     private val sensorReader: StepSensorReader,
@@ -24,7 +24,7 @@ class StepSync(
     companion object {
         private const val TAG = "StepSync"
 
-        fun create(context: Context, repository: LogRepository): StepSync {
+        fun create(context: Context, repository: StepsRepository): StepSync {
             return StepSync(
                 StepSensorReader(context.applicationContext, repository),
                 HealthConnectStepReader(context.applicationContext, repository)

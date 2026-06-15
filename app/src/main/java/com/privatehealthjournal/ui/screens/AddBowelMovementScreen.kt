@@ -43,12 +43,12 @@ import com.privatehealthjournal.data.entity.BristolType
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBowelMovementScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -71,7 +71,7 @@ fun AddBowelMovementScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingBowelMovement()
         onNavigateBack()
     }
 
@@ -154,7 +154,7 @@ fun AddBowelMovementScreen(
                     } else {
                         viewModel.addBowelMovement(selectedType, notes.trim(), timestamp)
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingBowelMovement()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

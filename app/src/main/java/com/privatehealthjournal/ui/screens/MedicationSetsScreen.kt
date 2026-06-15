@@ -54,13 +54,13 @@ import com.privatehealthjournal.data.entity.MedicationSetReminder
 import com.privatehealthjournal.data.entity.MedicationSetWithItems
 import com.privatehealthjournal.ui.components.DeleteConfirmationDialog
 import com.privatehealthjournal.ui.components.ReminderEditDialog
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationSetsScreen(
-    viewModel: LogViewModel,
+    viewModel: MedicationViewModel,
     onNavigateBack: () -> Unit,
     onAddSet: () -> Unit,
     onEditSet: (Long) -> Unit

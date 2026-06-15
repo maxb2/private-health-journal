@@ -38,12 +38,12 @@ import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBloodGlucoseScreen(
-    viewModel: LogViewModel,
+    viewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -77,7 +77,7 @@ fun AddBloodGlucoseScreen(
     val isValid = glucoseValue != null && glucoseValue > 0
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingBloodGlucose()
         onNavigateBack()
     }
 
@@ -221,7 +221,7 @@ fun AddBloodGlucoseScreen(
                             timestamp = timestamp
                         )
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingBloodGlucose()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

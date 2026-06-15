@@ -35,12 +35,12 @@ import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCholesterolScreen(
-    viewModel: LogViewModel,
+    viewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -71,7 +71,7 @@ fun AddCholesterolScreen(
     val hasAtLeastOneValue = total.isNotBlank() || ldl.isNotBlank() || hdl.isNotBlank() || triglycerides.isNotBlank()
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingCholesterol()
         onNavigateBack()
     }
 
@@ -208,7 +208,7 @@ fun AddCholesterolScreen(
                             timestamp = timestamp
                         )
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingCholesterol()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),
