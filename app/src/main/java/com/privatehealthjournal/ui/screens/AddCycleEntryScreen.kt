@@ -39,13 +39,13 @@ import com.privatehealthjournal.data.entity.FlowIntensity
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddCycleEntryScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -70,7 +70,7 @@ fun AddCycleEntryScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingCycleEntry()
         onNavigateBack()
     }
 
@@ -191,7 +191,7 @@ fun AddCycleEntryScreen(
                     } else {
                         viewModel.addCycleEntry(entry)
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingCycleEntry()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth()

@@ -35,12 +35,12 @@ import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBloodPressureScreen(
-    viewModel: LogViewModel,
+    viewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -69,7 +69,7 @@ fun AddBloodPressureScreen(
     val isValid = systolic.toIntOrNull() != null && diastolic.toIntOrNull() != null
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingBloodPressure()
         onNavigateBack()
     }
 
@@ -190,7 +190,7 @@ fun AddBloodPressureScreen(
                             timestamp = timestamp
                         )
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingBloodPressure()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

@@ -10,7 +10,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.data.preferences.AppPreferences
 import com.privatehealthjournal.data.preferences.StepPrefs
-import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.data.repository.StepsRepository
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.LocalDate
@@ -18,7 +18,7 @@ import java.time.ZoneId
 
 class HealthConnectStepReader(
     private val context: Context,
-    private val repository: LogRepository
+    private val repository: StepsRepository
 ) {
     suspend fun sync() {
         if (!AppPreferences.getShowStepCounting(context).first()) return

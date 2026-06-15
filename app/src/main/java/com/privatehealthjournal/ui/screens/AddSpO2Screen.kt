@@ -32,12 +32,12 @@ import com.privatehealthjournal.data.entity.SpO2Entry
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSpO2Screen(
-    viewModel: LogViewModel,
+    viewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -65,7 +65,7 @@ fun AddSpO2Screen(
     val isValid = spo2Value != null && spo2Value in 0..100
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingSpO2()
         onNavigateBack()
     }
 
@@ -174,7 +174,7 @@ fun AddSpO2Screen(
                             timestamp = timestamp
                         )
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingSpO2()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

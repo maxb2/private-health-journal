@@ -51,12 +51,12 @@ import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddOtherEntryScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null,
     preselectedType: String? = null
@@ -107,7 +107,7 @@ fun AddOtherEntryScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingOtherEntry()
         onNavigateBack()
     }
 
@@ -336,7 +336,7 @@ fun AddOtherEntryScreen(
                     } else {
                         viewModel.addOtherEntry(entry)
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingOtherEntry()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

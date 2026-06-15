@@ -45,13 +45,13 @@ import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddSymptomScreen(
-    viewModel: LogViewModel,
+    viewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null,
     prefillName: String? = null
@@ -84,7 +84,7 @@ fun AddSymptomScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingSymptom()
         onNavigateBack()
     }
 
@@ -260,7 +260,7 @@ fun AddSymptomScreen(
                                 notes = notes.trim()
                             )
                         }
-                        viewModel.clearEditingState()
+                        viewModel.clearEditingSymptom()
                         onNavigateBack()
                     }
                 },
