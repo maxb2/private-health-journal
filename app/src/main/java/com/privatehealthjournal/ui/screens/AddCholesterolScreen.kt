@@ -12,21 +12,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +44,6 @@ fun AddCholesterolScreen(
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
-    val editingEntry by viewModel.editingCholesterol.collectAsState()
     val isEditMode = editId != null
 
     var total by rememberSaveable { mutableStateOf("") }
@@ -59,49 +54,32 @@ fun AddCholesterolScreen(
     var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadCholesterolForEditing(editId)
-        }
-    }
-
-    LaunchedEffect(editingEntry) {
-        editingEntry?.let { entry ->
-            total = entry.total?.toString() ?: ""
-            ldl = entry.ldl?.toString() ?: ""
-            hdl = entry.hdl?.toString() ?: ""
-            triglycerides = entry.triglycerides?.toString() ?: ""
-            notes = entry.notes
-            timestamp = entry.timestamp
-            existingId = entry.id
-        }
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingCholesterol,
+        load = { viewModel.loadCholesterolForEditing(it) }
+    ) { entry ->
+        total = entry.total?.toString() ?: ""
+        ldl = entry.ldl?.toString() ?: ""
+        hdl = entry.hdl?.toString() ?: ""
+        triglycerides = entry.triglycerides?.toString() ?: ""
+        notes = entry.notes
+        timestamp = entry.timestamp
+        existingId = entry.id
     }
 
     val hasAtLeastOneValue = total.isNotBlank() || ldl.isNotBlank() || hdl.isNotBlank() || triglycerides.isNotBlank()
 
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Cholesterol" else "Log Cholesterol",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Cholesterol" else "Log Cholesterol",
+                onBack = handleBack
             )
         }
     ) { paddingValues ->

@@ -15,15 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -46,6 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 private data class MedItemState(
@@ -60,7 +58,6 @@ fun AddMedicationSetScreen(
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
-    val editingSet by viewModel.editingMedicationSet.collectAsState()
     val medicationNames by viewModel.allMedicationNames.collectAsState()
     val isEditMode = editId != null
 
@@ -68,49 +65,33 @@ fun AddMedicationSetScreen(
     val items = remember { mutableStateListOf(MedItemState()) }
     var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadMedicationSetForEditing(editId)
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingMedicationSet,
+        load = { viewModel.loadMedicationSetForEditing(it) }
+    ) { setWithItems ->
+        setName = setWithItems.set.name
+        existingId = setWithItems.set.id
+        items.clear()
+        setWithItems.items.forEach { item ->
+            items.add(MedItemState(name = item.name, dosage = item.dosage))
+        }
+        if (items.isEmpty()) {
+            items.add(MedItemState())
         }
     }
 
-    LaunchedEffect(editingSet) {
-        editingSet?.let { setWithItems ->
-            setName = setWithItems.set.name
-            existingId = setWithItems.set.id
-            items.clear()
-            setWithItems.items.forEach { item ->
-                items.add(MedItemState(name = item.name, dosage = item.dosage))
-            }
-            if (items.isEmpty()) {
-                items.add(MedItemState())
-            }
-        }
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
     }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Medication Set" else "New Medication Set",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Medication Set" else "New Medication Set",
+                onBack = handleBack,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
             )
         }
     ) { paddingValues ->
@@ -220,7 +201,7 @@ fun AddMedicationSetScreen(
                     }
 
                     if (index < items.lastIndex) {
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.padding(vertical = 12.dp),
                             color = MaterialTheme.colorScheme.outlineVariant
                         )

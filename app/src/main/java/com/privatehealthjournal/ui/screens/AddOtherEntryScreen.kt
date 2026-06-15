@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -24,17 +23,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -54,6 +49,8 @@ import com.privatehealthjournal.data.entity.BristolType
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -64,7 +61,6 @@ fun AddOtherEntryScreen(
     editId: Long? = null,
     preselectedType: String? = null
 ) {
-    val editingOtherEntry by viewModel.editingOtherEntry.collectAsState()
     val exerciseTypes by viewModel.exerciseTypes.collectAsState()
     val sleepQualities by viewModel.sleepQualities.collectAsState()
     val stressSources by viewModel.stressSources.collectAsState()
@@ -87,26 +83,20 @@ fun AddOtherEntryScreen(
     // For bowel movement Bristol scale
     var selectedBristolType by rememberSaveable { mutableIntStateOf(4) }
 
-    // Load existing entry for editing
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadOtherEntryForEditing(editId)
-        }
-    }
-
-    // Populate fields when editing entry is loaded
-    LaunchedEffect(editingOtherEntry) {
-        editingOtherEntry?.let { entry ->
-            selectedType = entry.entryType
-            subType = entry.subType
-            value = entry.value
-            notes = entry.notes
-            pointCreditText = entry.pointCredit?.toString() ?: ""
-            timestamp = entry.timestamp
-            existingId = entry.id
-            if (entry.entryType == OtherEntryType.BOWEL_MOVEMENT) {
-                selectedBristolType = entry.value.toIntOrNull() ?: 4
-            }
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingOtherEntry,
+        load = { viewModel.loadOtherEntryForEditing(it) }
+    ) { entry ->
+        selectedType = entry.entryType
+        subType = entry.subType
+        value = entry.value
+        notes = entry.notes
+        pointCreditText = entry.pointCredit?.toString() ?: ""
+        timestamp = entry.timestamp
+        existingId = entry.id
+        if (entry.entryType == OtherEntryType.BOWEL_MOVEMENT) {
+            selectedBristolType = entry.value.toIntOrNull() ?: 4
         }
     }
 
@@ -116,29 +106,17 @@ fun AddOtherEntryScreen(
         "Log ${getTypeTitle(selectedType)}"
     }
 
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        screenTitle,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
+            EntryTopAppBar(
+                title = screenTitle,
+                onBack = handleBack,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
             )
         }
     ) { paddingValues ->

@@ -12,22 +12,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +36,8 @@ import com.privatehealthjournal.data.entity.BloodGlucoseEntry
 import com.privatehealthjournal.data.entity.GlucoseMealContext
 import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +47,6 @@ fun AddBloodGlucoseScreen(
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
-    val editingEntry by viewModel.editingBloodGlucose.collectAsState()
     val isEditMode = editId != null
 
     var glucoseLevel by rememberSaveable { mutableStateOf("") }
@@ -61,53 +56,36 @@ fun AddBloodGlucoseScreen(
     var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadBloodGlucoseForEditing(editId)
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingBloodGlucose,
+        load = { viewModel.loadBloodGlucoseForEditing(it) }
+    ) { entry ->
+        glucoseLevel = if (entry.glucoseLevel == entry.glucoseLevel.toLong().toDouble()) {
+            entry.glucoseLevel.toLong().toString()
+        } else {
+            entry.glucoseLevel.toString()
         }
-    }
-
-    LaunchedEffect(editingEntry) {
-        editingEntry?.let { entry ->
-            glucoseLevel = if (entry.glucoseLevel == entry.glucoseLevel.toLong().toDouble()) {
-                entry.glucoseLevel.toLong().toString()
-            } else {
-                entry.glucoseLevel.toString()
-            }
-            unit = entry.unit
-            mealContext = entry.mealContext
-            notes = entry.notes
-            timestamp = entry.timestamp
-            existingId = entry.id
-        }
+        unit = entry.unit
+        mealContext = entry.mealContext
+        notes = entry.notes
+        timestamp = entry.timestamp
+        existingId = entry.id
     }
 
     val glucoseValue = glucoseLevel.toDoubleOrNull()
     val isValid = glucoseValue != null && glucoseValue > 0
 
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Blood Glucose" else "Log Blood Glucose",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Blood Glucose" else "Log Blood Glucose",
+                onBack = handleBack
             )
         }
     ) { paddingValues ->

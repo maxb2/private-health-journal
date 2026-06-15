@@ -12,23 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +37,8 @@ import com.privatehealthjournal.data.entity.CycleEntry
 import com.privatehealthjournal.data.entity.CycleSymptom
 import com.privatehealthjournal.data.entity.FlowIntensity
 import com.privatehealthjournal.ui.components.DateTimePicker
+import com.privatehealthjournal.ui.components.EntryTopAppBar
+import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
 private val CycleRose = Color(0xFFE91E63)
@@ -54,7 +50,6 @@ fun AddCycleEntryScreen(
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
-    val editingEntry by viewModel.editingCycleEntry.collectAsState()
     val isEditMode = editId != null
 
     var selectedFlow by rememberSaveable { mutableStateOf(FlowIntensity.MEDIUM) }
@@ -63,42 +58,28 @@ fun AddCycleEntryScreen(
     var timestamp by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
     var existingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(editId) {
-        if (editId != null) {
-            viewModel.loadCycleEntryForEditing(editId)
-        }
+    rememberEditingEntry(
+        editId = editId,
+        editingFlow = viewModel.editingCycleEntry,
+        load = { viewModel.loadCycleEntryForEditing(it) }
+    ) { entry ->
+        selectedFlow = entry.flow
+        selectedSymptoms = CycleSymptom.decode(entry.symptoms)
+        notes = entry.notes
+        timestamp = entry.timestamp
+        existingId = entry.id
     }
 
-    LaunchedEffect(editingEntry) {
-        editingEntry?.let { entry ->
-            selectedFlow = entry.flow
-            selectedSymptoms = CycleSymptom.decode(entry.symptoms)
-            notes = entry.notes
-            timestamp = entry.timestamp
-            existingId = entry.id
-        }
+    val handleBack = {
+        viewModel.clearEditingState()
+        onNavigateBack()
     }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (isEditMode) "Edit Period Entry" else "Log Period",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearEditingState()
-                        onNavigateBack()
-                    }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            EntryTopAppBar(
+                title = if (isEditMode) "Edit Period Entry" else "Log Period",
+                onBack = handleBack
             )
         }
     ) { paddingValues ->

@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +76,7 @@ import com.privatehealthjournal.ui.components.SpO2Card
 import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
+import com.privatehealthjournal.ui.nav.NavIntent
 import com.privatehealthjournal.viewmodel.LogViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -86,34 +87,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(
     viewModel: LogViewModel,
-    onAddMeal: () -> Unit,
-    onAddSymptom: (String?) -> Unit,
-    onAddOther: (String) -> Unit,
-    onAddMedication: (String?) -> Unit,
-    onAddBloodPressure: () -> Unit,
-    onAddCholesterol: () -> Unit,
-    onAddWeight: () -> Unit,
-    onAddSpO2: () -> Unit,
-    onAddBloodGlucose: () -> Unit,
-    onAddStepCount: () -> Unit = {},
-    onViewBiometricsChart: () -> Unit = {},
-    onViewHistory: () -> Unit,
-    onViewCalendar: () -> Unit = {},
-    onViewSettings: () -> Unit = {},
-    onEditMeal: (Long) -> Unit = {},
-    onEditSymptom: (Long) -> Unit = {},
-    onEditOther: (Long) -> Unit = {},
-    onEditMedication: (Long) -> Unit = {},
-    onEditBloodPressure: (Long) -> Unit = {},
-    onEditCholesterol: (Long) -> Unit = {},
-    onEditWeight: (Long) -> Unit = {},
-    onEditSpO2: (Long) -> Unit = {},
-    onEditBloodGlucose: (Long) -> Unit = {},
-    onEditStepCount: (Long) -> Unit = {},
-    onViewMedicationSets: () -> Unit = {},
-    onViewMealBudget: () -> Unit = {},
-    onViewCycleTracking: () -> Unit = {},
-    onEditCycleEntry: (Long) -> Unit = {}
+    onNavigate: (NavIntent) -> Unit
 ) {
     val recentMeals by viewModel.recentMeals.collectAsState()
     val recentSymptoms by viewModel.recentSymptomEntries.collectAsState()
@@ -143,25 +117,25 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onViewMealBudget) {
+                    IconButton(onClick = { onNavigate(NavIntent.MealBudget) }) {
                         Icon(
                             imageVector = Icons.Default.Savings,
                             contentDescription = "Meal Budget"
                         )
                     }
-                    IconButton(onClick = onViewCalendar) {
+                    IconButton(onClick = { onNavigate(NavIntent.Calendar) }) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = "Calendar"
                         )
                     }
-                    IconButton(onClick = onViewHistory) {
+                    IconButton(onClick = { onNavigate(NavIntent.History) }) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = "History"
                         )
                     }
-                    IconButton(onClick = onViewSettings) {
+                    IconButton(onClick = { onNavigate(NavIntent.Settings) }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings"
@@ -188,7 +162,7 @@ fun HomeScreen(
             ) {
                 // Meal button
                 Button(
-                    onClick = { onAddMeal() },
+                    onClick = { onNavigate(NavIntent.AddMeal) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
@@ -204,7 +178,7 @@ fun HomeScreen(
 
                 // Symptom button
                 Button(
-                    onClick = { onAddSymptom(null) },
+                    onClick = { onNavigate(NavIntent.AddSymptom()) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
@@ -247,14 +221,14 @@ fun HomeScreen(
                             text = { Text("Log Medication") },
                             onClick = {
                                 medsMenuExpanded = false
-                                onAddMedication(null)
+                                onNavigate(NavIntent.AddMedication())
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Medication Sets") },
                             onClick = {
                                 medsMenuExpanded = false
-                                onViewMedicationSets()
+                                onNavigate(NavIntent.MedicationSets)
                             }
                         )
                     }
@@ -289,35 +263,35 @@ fun HomeScreen(
                             text = { Text("Blood Pressure") },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onAddBloodPressure()
+                                onNavigate(NavIntent.AddBloodPressure)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Cholesterol") },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onAddCholesterol()
+                                onNavigate(NavIntent.AddCholesterol)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Weight") },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onAddWeight()
+                                onNavigate(NavIntent.AddWeight)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("SpO2 (Blood Oxygen)") },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onAddSpO2()
+                                onNavigate(NavIntent.AddSpO2)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Blood Glucose") },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onAddBloodGlucose()
+                                onNavigate(NavIntent.AddBloodGlucose)
                             }
                         )
                         if (showStepCounting) {
@@ -325,11 +299,11 @@ fun HomeScreen(
                                 text = { Text("Steps") },
                                 onClick = {
                                     biometricsMenuExpanded = false
-                                    onAddStepCount()
+                                    onNavigate(NavIntent.AddStepCount)
                                 }
                             )
                         }
-                        Divider()
+                        HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text("View Charts") },
                             leadingIcon = {
@@ -340,7 +314,7 @@ fun HomeScreen(
                             },
                             onClick = {
                                 biometricsMenuExpanded = false
-                                onViewBiometricsChart()
+                                onNavigate(NavIntent.BiometricsChart)
                             }
                         )
                     }
@@ -375,49 +349,49 @@ fun HomeScreen(
                             text = { Text("Bowel Movement") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("BOWEL_MOVEMENT")
+                                onNavigate(NavIntent.AddOther("BOWEL_MOVEMENT"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Sleep") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("SLEEP")
+                                onNavigate(NavIntent.AddOther("SLEEP"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Exercise") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("EXERCISE")
+                                onNavigate(NavIntent.AddOther("EXERCISE"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Stress") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("STRESS")
+                                onNavigate(NavIntent.AddOther("STRESS"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Mood") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("MOOD")
+                                onNavigate(NavIntent.AddOther("MOOD"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Water Intake") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("WATER_INTAKE")
+                                onNavigate(NavIntent.AddOther("WATER_INTAKE"))
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Other") },
                             onClick = {
                                 otherMenuExpanded = false
-                                onAddOther("OTHER")
+                                onNavigate(NavIntent.AddOther("OTHER"))
                             }
                         )
                     }
@@ -426,7 +400,7 @@ fun HomeScreen(
                 // Cycle tracking button (hidden when showCycleTracking is false)
                 if (showCycleTracking) {
                     Button(
-                        onClick = { onViewCycleTracking() },
+                        onClick = { onNavigate(NavIntent.CycleTracking) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFE91E63)
                         )
@@ -533,7 +507,7 @@ fun HomeScreen(
                                     .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Divider(
+                                HorizontalDivider(
                                     modifier = Modifier.weight(1f),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
@@ -543,7 +517,7 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 12.dp)
                                 )
-                                Divider(
+                                HorizontalDivider(
                                     modifier = Modifier.weight(1f),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
@@ -557,7 +531,7 @@ fun HomeScreen(
                                 is EntryItem.Meal -> MealEntryCard(
                                     meal = item.entry,
                                     onDelete = { viewModel.deleteMeal(item.entry) },
-                                    onEdit = { onEditMeal(item.entry.meal.id) }
+                                    onEdit = { onNavigate(NavIntent.EditMeal(item.entry.meal.id)) }
                                 )
                                 is EntryItem.Symptom -> SymptomEntryCard(
                                     name = item.entry.name,
@@ -566,52 +540,52 @@ fun HomeScreen(
                                     startTime = item.entry.startTime,
                                     endTime = item.entry.endTime,
                                     onDelete = { viewModel.deleteSymptom(item.entry) },
-                                    onEdit = { onEditSymptom(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditSymptom(item.entry.id)) }
                                 )
                                 is EntryItem.Other -> OtherEntryCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteOtherEntry(item.entry) },
-                                    onEdit = { onEditOther(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditOther(item.entry.id)) }
                                 )
                                 is EntryItem.Medication -> MedicationCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteMedication(item.entry) },
-                                    onEdit = { onEditMedication(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditMedication(item.entry.id)) }
                                 )
                                 is EntryItem.BloodPressure -> BloodPressureCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteBloodPressure(item.entry) },
-                                    onEdit = { onEditBloodPressure(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditBloodPressure(item.entry.id)) }
                                 )
                                 is EntryItem.Cholesterol -> CholesterolCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteCholesterol(item.entry) },
-                                    onEdit = { onEditCholesterol(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditCholesterol(item.entry.id)) }
                                 )
                                 is EntryItem.Weight -> WeightCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteWeight(item.entry) },
-                                    onEdit = { onEditWeight(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditWeight(item.entry.id)) }
                                 )
                                 is EntryItem.SpO2 -> SpO2Card(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteSpO2(item.entry) },
-                                    onEdit = { onEditSpO2(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditSpO2(item.entry.id)) }
                                 )
                                 is EntryItem.BloodGlucose -> BloodGlucoseCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteBloodGlucose(item.entry) },
-                                    onEdit = { onEditBloodGlucose(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditBloodGlucose(item.entry.id)) }
                                 )
                                 is EntryItem.Cycle -> CycleEntryCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteCycleEntry(item.entry) },
-                                    onEdit = { onEditCycleEntry(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditCycleEntry(item.entry.id)) }
                                 )
                                 is EntryItem.StepCount -> StepCountCard(
                                     entry = item.entry,
                                     onDelete = { viewModel.deleteStepCount(item.entry) },
-                                    onEdit = { onEditStepCount(item.entry.id) }
+                                    onEdit = { onNavigate(NavIntent.EditStepCount(item.entry.id)) }
                                 )
                             }
                         }
