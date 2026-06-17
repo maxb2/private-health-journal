@@ -79,7 +79,8 @@ fun AddCholesterolScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Cholesterol" else "Log Cholesterol",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

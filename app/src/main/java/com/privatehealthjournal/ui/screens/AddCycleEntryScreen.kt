@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -41,7 +41,6 @@ import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
 import com.privatehealthjournal.viewmodel.LogViewModel
 
-private val CycleRose = Color(0xFFE91E63)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -79,7 +78,8 @@ fun AddCycleEntryScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Period Entry" else "Log Period",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.cycleContainerColor()
             )
         }
     ) { paddingValues ->
@@ -91,9 +91,9 @@ fun AddCycleEntryScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Icon(
-                imageVector = Icons.Default.Favorite,
+                imageVector = Icons.Default.WaterDrop,
                 contentDescription = null,
-                tint = CycleRose,
+                tint = com.privatehealthjournal.ui.theme.cycleAccentColor(),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -114,7 +114,7 @@ fun AddCycleEntryScreen(
                         onClick = { selectedFlow = intensity },
                         label = { Text(intensity.displayLabel) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = CycleRose,
+                            selectedContainerColor = com.privatehealthjournal.ui.theme.cycleAccentColor(),
                             selectedLabelColor = Color.White
                         )
                     )
@@ -147,8 +147,8 @@ fun AddCycleEntryScreen(
                         },
                         label = { Text(symptom.displayLabel) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = CycleRose.copy(alpha = 0.2f),
-                            selectedLabelColor = CycleRose
+                            selectedContainerColor = com.privatehealthjournal.ui.theme.cycleAccentColor().copy(alpha = 0.2f),
+                            selectedLabelColor = com.privatehealthjournal.ui.theme.cycleAccentColor()
                         )
                     )
                 }

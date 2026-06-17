@@ -87,7 +87,8 @@ fun AddStepCountScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Steps" else "Log Steps",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

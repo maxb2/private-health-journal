@@ -476,7 +476,7 @@ private fun CalendarDayCell(
                         .clip(CircleShape)
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.onPrimary
-                            else Color(0xFFE91E63)
+                            else com.privatehealthjournal.ui.theme.cycleAccentColor()
                         )
                 )
             }

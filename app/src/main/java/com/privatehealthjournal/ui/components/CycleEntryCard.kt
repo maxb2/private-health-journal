@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,7 +38,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val CycleRose = Color(0xFFE91E63)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -61,7 +60,7 @@ fun CycleEntryCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = com.privatehealthjournal.ui.theme.cycleContainerColor())
     ) {
         Row(
             modifier = Modifier
@@ -70,9 +69,9 @@ fun CycleEntryCard(
             verticalAlignment = Alignment.Top
         ) {
             Icon(
-                imageVector = Icons.Default.Favorite,
+                imageVector = Icons.Default.WaterDrop,
                 contentDescription = "Cycle",
-                tint = CycleRose,
+                tint = com.privatehealthjournal.ui.theme.cycleAccentColor(),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -87,7 +86,7 @@ fun CycleEntryCard(
                     text = entry.flow.displayLabel,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = CycleRose
+                    color = com.privatehealthjournal.ui.theme.onCycleContainerColor()
                 )
                 if (symptoms.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(6.dp))
@@ -97,7 +96,7 @@ fun CycleEntryCard(
                                 onClick = {},
                                 label = { Text(symptom.displayLabel, style = MaterialTheme.typography.labelSmall) },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = CycleRose.copy(alpha = 0.12f)
+                                    containerColor = com.privatehealthjournal.ui.theme.cycleAccentColor().copy(alpha = 0.2f)
                                 )
                             )
                         }
@@ -108,14 +107,14 @@ fun CycleEntryCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onCycleContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatCycleTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onCycleContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -124,7 +123,7 @@ fun CycleEntryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onCycleContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -132,7 +131,7 @@ fun CycleEntryCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onCycleContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }

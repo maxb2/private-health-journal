@@ -51,7 +51,7 @@ fun BloodPressureCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
         )
     ) {
         Row(
@@ -84,7 +84,7 @@ fun BloodPressureCard(
                     Text(
                         text = "Pulse: $pulse bpm",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor()
                     )
                 }
                 if (entry.notes.isNotBlank()) {
@@ -92,14 +92,14 @@ fun BloodPressureCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -108,7 +108,7 @@ fun BloodPressureCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -116,7 +116,7 @@ fun BloodPressureCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }
@@ -130,7 +130,7 @@ private fun getBloodPressureColor(systolic: Int, diastolic: Int) = when {
     systolic >= 140 || diastolic >= 90 -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
     systolic >= 130 || diastolic >= 80 -> MaterialTheme.colorScheme.tertiary
     systolic >= 120 -> MaterialTheme.colorScheme.secondary
-    else -> MaterialTheme.colorScheme.primary
+    else -> com.privatehealthjournal.ui.theme.onBiometricContainerColor()
 }
 
 private fun formatTimestamp(timestamp: Long): String {

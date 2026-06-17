@@ -93,7 +93,7 @@ fun AddSymptomScreen(
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Symptom" else "Log Symptom",
                 onBack = handleBack,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
             )
         }
     ) { paddingValues ->
@@ -107,7 +107,7 @@ fun AddSymptomScreen(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -172,8 +172,11 @@ fun AddSymptomScreen(
                 steps = 3,
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.secondary,
-                    activeTrackColor = MaterialTheme.colorScheme.secondary
+                    thumbColor = MaterialTheme.colorScheme.tertiary,
+                    activeTrackColor = MaterialTheme.colorScheme.tertiary,
+                    activeTickColor = MaterialTheme.colorScheme.onTertiary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    inactiveTickColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
                 )
             )
 
@@ -264,7 +267,7 @@ fun AddSymptomScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = symptomName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
+                    containerColor = MaterialTheme.colorScheme.tertiary
                 )
             ) {
                 Text(if (isEditMode) "Update Symptom" else "Save Symptom Entry")

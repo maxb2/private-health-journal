@@ -16,17 +16,75 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+val BiometricOrangeLight = Color(0xFFFFE0CC)
+val BiometricOrangeMed = Color(0xFFE89048)
+val BiometricOrangeDark = Color(0xFF8A4214)
+val BiometricOrangeContainerDark = Color(0xFF4A2810)
+val BiometricOrangeAccentDark = Color(0xFFFFB07A)
+
+@Composable
+fun biometricContainerColor(): Color =
+    if (isSystemInDarkTheme()) BiometricOrangeContainerDark else BiometricOrangeLight
+
+@Composable
+fun onBiometricContainerColor(): Color =
+    if (isSystemInDarkTheme()) BiometricOrangeLight else BiometricOrangeDark
+
+@Composable
+fun biometricAccentColor(): Color =
+    if (isSystemInDarkTheme()) BiometricOrangeAccentDark else BiometricOrangeMed
+
+val CycleMaroonLight = Color(0xFFF5D5DA)
+val CycleMaroonAccent = Color(0xFF7A2230)
+val CycleMaroonDark = Color(0xFF4D0F1A)
+val CycleMaroonContainerDark = Color(0xFF3D101A)
+val CycleMaroonAccentDark = Color(0xFFD88898)
+
+@Composable
+fun cycleContainerColor(): Color =
+    if (isSystemInDarkTheme()) CycleMaroonContainerDark else CycleMaroonLight
+
+@Composable
+fun onCycleContainerColor(): Color =
+    if (isSystemInDarkTheme()) CycleMaroonLight else CycleMaroonDark
+
+@Composable
+fun cycleAccentColor(): Color =
+    if (isSystemInDarkTheme()) CycleMaroonAccentDark else CycleMaroonAccent
+
+val OtherGreyLight = Color(0xFFE8E8E8)
+val OtherGreyAccent = Color(0xFF6B6B6B)
+val OtherGreyDark = Color(0xFF3A3A3A)
+val OtherGreyContainerDark = Color(0xFF2A2A2A)
+val OtherGreyAccentDark = Color(0xFFA0A0A0)
+
+@Composable
+fun otherContainerColor(): Color =
+    if (isSystemInDarkTheme()) OtherGreyContainerDark else OtherGreyLight
+
+@Composable
+fun onOtherContainerColor(): Color =
+    if (isSystemInDarkTheme()) OtherGreyLight else OtherGreyDark
+
+@Composable
+fun otherAccentColor(): Color =
+    if (isSystemInDarkTheme()) OtherGreyAccentDark else OtherGreyAccent
+
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF4CAF50),
+    primary = Color(0xFF5FA0D2),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFC8E6C9),
-    onPrimaryContainer = Color(0xFF1B5E20),
-    secondary = Color(0xFFFF7043),
+    primaryContainer = Color(0xFFDCEDF5),
+    onPrimaryContainer = Color(0xFF1F4666),
+    secondary = Color(0xFF4A9938),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFFCCBC),
-    onSecondaryContainer = Color(0xFFBF360C),
-    tertiary = Color(0xFF03A9F4),
+    secondaryContainer = Color(0xFFDDEBCE),
+    onSecondaryContainer = Color(0xFF1F4612),
+    tertiary = Color(0xFFD55050),
     onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF8D7D6),
+    onTertiaryContainer = Color(0xFF6E1622),
+    error = Color(0xFFA82238),
+    onError = Color.White,
     background = Color(0xFFFFFBFE),
     onBackground = Color(0xFF1C1B1F),
     surface = Color(0xFFFFFBFE),
@@ -34,16 +92,20 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF81C784),
-    onPrimary = Color(0xFF1B5E20),
-    primaryContainer = Color(0xFF2E7D32),
-    onPrimaryContainer = Color(0xFFC8E6C9),
-    secondary = Color(0xFFFF8A65),
-    onSecondary = Color(0xFFBF360C),
-    secondaryContainer = Color(0xFFD84315),
-    onSecondaryContainer = Color(0xFFFFCCBC),
-    tertiary = Color(0xFF4FC3F7),
-    onTertiary = Color(0xFF01579B),
+    primary = Color(0xFFB6D9EC),
+    onPrimary = Color(0xFF1F4666),
+    primaryContainer = Color(0xFF24445E),
+    onPrimaryContainer = Color(0xFFDCEDF5),
+    secondary = Color(0xFF7DBE58),
+    onSecondary = Color(0xFF1F4612),
+    secondaryContainer = Color(0xFF274E1B),
+    onSecondaryContainer = Color(0xFFDDEBCE),
+    tertiary = Color(0xFFE97A78),
+    onTertiary = Color(0xFF6E1622),
+    tertiaryContainer = Color(0xFF5A1A26),
+    onTertiaryContainer = Color(0xFFF8D7D6),
+    error = Color(0xFFE97A78),
+    onError = Color(0xFF6E1622),
     background = Color(0xFF1C1B1F),
     onBackground = Color(0xFFE6E1E5),
     surface = Color(0xFF1C1B1F),
@@ -53,7 +115,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun PrivateHealthJournalTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

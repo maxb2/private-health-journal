@@ -52,7 +52,7 @@ fun MedicationCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
         Row(
@@ -64,7 +64,7 @@ fun MedicationCard(
             Icon(
                 imageVector = Icons.Default.Medication,
                 contentDescription = "Medication",
-                tint = MaterialTheme.colorScheme.tertiary,
+                tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -80,7 +80,7 @@ fun MedicationCard(
                     Text(
                         text = entry.dosage,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
 
@@ -89,7 +89,7 @@ fun MedicationCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
                 }
 
@@ -97,7 +97,7 @@ fun MedicationCard(
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -106,7 +106,7 @@ fun MedicationCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -114,7 +114,7 @@ fun MedicationCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
                     )
                 }
             }

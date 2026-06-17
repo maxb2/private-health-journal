@@ -51,7 +51,7 @@ fun CholesterolCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
         )
     ) {
         Row(
@@ -86,13 +86,13 @@ fun CholesterolCard(
                     Text(
                         text = values.joinToString(" | "),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor()
                     )
                 } else {
                     Text(
                         text = "No values recorded",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
 
@@ -101,14 +101,14 @@ fun CholesterolCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -117,7 +117,7 @@ fun CholesterolCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -125,7 +125,7 @@ fun CholesterolCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }
