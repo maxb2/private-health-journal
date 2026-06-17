@@ -51,7 +51,7 @@ fun SpO2Card(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
         )
     ) {
         Row(
@@ -63,7 +63,7 @@ fun SpO2Card(
             Icon(
                 imageVector = Icons.Default.Air,
                 contentDescription = "SpO2",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor(),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -84,7 +84,7 @@ fun SpO2Card(
                     Text(
                         text = "Pulse: $pulse bpm",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor()
                     )
                 }
                 if (entry.notes.isNotBlank()) {
@@ -92,14 +92,14 @@ fun SpO2Card(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -108,7 +108,7 @@ fun SpO2Card(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -116,7 +116,7 @@ fun SpO2Card(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }
@@ -128,7 +128,7 @@ fun SpO2Card(
 private fun getSpO2Color(spo2: Int) = when {
     spo2 < 90 -> MaterialTheme.colorScheme.error
     spo2 < 95 -> MaterialTheme.colorScheme.tertiary
-    else -> MaterialTheme.colorScheme.primary
+    else -> com.privatehealthjournal.ui.theme.onBiometricContainerColor()
 }
 
 private fun formatTimestamp(timestamp: Long): String {

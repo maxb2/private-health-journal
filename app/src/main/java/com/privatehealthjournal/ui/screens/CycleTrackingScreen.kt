@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -48,7 +48,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-private val CycleRose = Color(0xFFE91E63)
 
 data class PeriodGroup(
     val entries: List<CycleEntry>,
@@ -136,14 +135,14 @@ fun CycleTrackingScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = com.privatehealthjournal.ui.theme.cycleContainerColor()
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddEntry,
-                containerColor = CycleRose,
+                containerColor = com.privatehealthjournal.ui.theme.cycleAccentColor(),
                 contentColor = Color.White
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Log Period")
@@ -160,9 +159,9 @@ fun CycleTrackingScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Favorite,
+                    imageVector = Icons.Default.WaterDrop,
                     contentDescription = null,
-                    tint = CycleRose.copy(alpha = 0.4f),
+                    tint = com.privatehealthjournal.ui.theme.cycleAccentColor().copy(alpha = 0.4f),
                     modifier = Modifier.padding(8.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -198,7 +197,7 @@ fun CycleTrackingScreen(
                                 text = "Cycle Summary",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = CycleRose
+                                color = com.privatehealthjournal.ui.theme.cycleAccentColor()
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             val lastPeriod = periods.firstOrNull()
@@ -307,7 +306,7 @@ private fun PeriodCard(
             Text(
                 text = period.dominantFlow.displayLabel + " flow",
                 style = MaterialTheme.typography.bodyMedium,
-                color = CycleRose
+                color = com.privatehealthjournal.ui.theme.cycleAccentColor()
             )
             if (period.allSymptoms.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(6.dp))
@@ -317,7 +316,7 @@ private fun PeriodCard(
                             onClick = {},
                             label = { Text(symptom.displayLabel, style = MaterialTheme.typography.labelSmall) },
                             colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = CycleRose.copy(alpha = 0.12f)
+                                containerColor = com.privatehealthjournal.ui.theme.cycleAccentColor().copy(alpha = 0.12f)
                             )
                         )
                     }

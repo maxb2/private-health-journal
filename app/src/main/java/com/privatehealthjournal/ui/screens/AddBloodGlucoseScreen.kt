@@ -85,7 +85,8 @@ fun AddBloodGlucoseScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Blood Glucose" else "Log Blood Glucose",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

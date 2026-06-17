@@ -79,7 +79,8 @@ fun AddWeightScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Weight" else "Log Weight",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

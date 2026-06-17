@@ -73,7 +73,8 @@ fun AddSpO2Screen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit SpO2" else "Log SpO2",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

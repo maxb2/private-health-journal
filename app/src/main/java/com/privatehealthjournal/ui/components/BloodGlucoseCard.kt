@@ -52,7 +52,7 @@ fun BloodGlucoseCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
         )
     ) {
         Row(
@@ -64,7 +64,7 @@ fun BloodGlucoseCard(
             Icon(
                 imageVector = Icons.Default.Bloodtype,
                 contentDescription = "Blood Glucose",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor(),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -85,7 +85,7 @@ fun BloodGlucoseCard(
                     Text(
                         text = context.displayLabel,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor()
                     )
                 }
                 if (entry.notes.isNotBlank()) {
@@ -93,14 +93,14 @@ fun BloodGlucoseCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -109,7 +109,7 @@ fun BloodGlucoseCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -117,7 +117,7 @@ fun BloodGlucoseCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }
@@ -137,13 +137,13 @@ private fun formatGlucoseLevel(level: Double, unit: GlucoseUnit): String {
 private fun getGlucoseColor(level: Double, unit: GlucoseUnit) = when (unit) {
     GlucoseUnit.MG_DL -> when {
         level < 70 -> MaterialTheme.colorScheme.error
-        level <= 99 -> MaterialTheme.colorScheme.primary
+        level <= 99 -> com.privatehealthjournal.ui.theme.onBiometricContainerColor()
         level <= 125 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.error
     }
     GlucoseUnit.MMOL_L -> when {
         level < 3.9 -> MaterialTheme.colorScheme.error
-        level <= 5.5 -> MaterialTheme.colorScheme.primary
+        level <= 5.5 -> com.privatehealthjournal.ui.theme.onBiometricContainerColor()
         level <= 6.9 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.error
     }

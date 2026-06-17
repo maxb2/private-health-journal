@@ -88,14 +88,14 @@ fun MedicationSetsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddSet,
-                containerColor = MaterialTheme.colorScheme.tertiary
+                containerColor = MaterialTheme.colorScheme.secondary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Medication Set")
             }
@@ -186,7 +186,7 @@ private fun MedicationSetCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
         Column(
@@ -201,7 +201,7 @@ private fun MedicationSetCard(
                 Icon(
                     imageVector = Icons.Default.Medication,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(28.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -286,7 +286,7 @@ private fun MedicationSetCard(
                 onClick = onLogAll,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
                 Icon(

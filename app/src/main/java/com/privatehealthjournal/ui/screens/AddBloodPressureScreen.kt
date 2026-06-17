@@ -77,7 +77,8 @@ fun AddBloodPressureScreen(
         topBar = {
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Blood Pressure" else "Log Blood Pressure",
-                onBack = handleBack
+                onBack = handleBack,
+                containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
             )
         }
     ) { paddingValues ->

@@ -79,7 +79,7 @@ fun AddMedicationScreen(
             EntryTopAppBar(
                 title = if (isEditMode) "Edit Medication" else "Log Medication",
                 onBack = handleBack,
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
         }
     ) { paddingValues ->
@@ -93,7 +93,7 @@ fun AddMedicationScreen(
             Icon(
                 imageVector = Icons.Default.Medication,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
+                tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -221,7 +221,7 @@ fun AddMedicationScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary
+                    containerColor = MaterialTheme.colorScheme.secondary
                 )
             ) {
                 Text(if (isEditMode) "Update Medication" else "Save Medication")

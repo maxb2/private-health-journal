@@ -116,7 +116,7 @@ fun AddOtherEntryScreen(
             EntryTopAppBar(
                 title = screenTitle,
                 onBack = handleBack,
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                containerColor = com.privatehealthjournal.ui.theme.otherContainerColor()
             )
         }
     ) { paddingValues ->
@@ -341,7 +341,7 @@ fun AddOtherEntryScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary
+                    containerColor = com.privatehealthjournal.ui.theme.otherAccentColor()
                 )
             ) {
                 Text(if (isEditMode) "Update Entry" else "Save Entry")
@@ -480,8 +480,8 @@ private fun BristolTypeCard(
 private fun getBristolTypeColor(type: Int): Color {
     return when (type) {
         1, 2 -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-        3, 4 -> Color(0xFF4CAF50)
-        5 -> Color(0xFFFFC107)
+        3, 4 -> MaterialTheme.colorScheme.secondary
+        5 -> MaterialTheme.colorScheme.error
         6, 7 -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.primary
     }

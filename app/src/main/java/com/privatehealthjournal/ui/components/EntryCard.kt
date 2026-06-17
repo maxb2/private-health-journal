@@ -190,7 +190,7 @@ fun SymptomEntryCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
         )
     ) {
         Row(
@@ -202,7 +202,7 @@ fun SymptomEntryCard(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = "Symptom",
-                tint = MaterialTheme.colorScheme.secondary,
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -226,14 +226,14 @@ fun SymptomEntryCard(
                     Text(
                         text = notes,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimeRange(startTime, endTime),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -242,7 +242,7 @@ fun SymptomEntryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -250,7 +250,7 @@ fun SymptomEntryCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -431,7 +431,7 @@ fun OtherEntryCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            containerColor = com.privatehealthjournal.ui.theme.otherContainerColor()
         )
     ) {
         Row(
@@ -457,7 +457,7 @@ fun OtherEntryCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = MaterialTheme.colorScheme.tertiary,
+                    tint = com.privatehealthjournal.ui.theme.otherAccentColor(),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -482,7 +482,7 @@ fun OtherEntryCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onOtherContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 if (entry.notes.isNotBlank()) {
@@ -490,14 +490,14 @@ fun OtherEntryCard(
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onOtherContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(entry.timestamp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onOtherContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -506,7 +506,7 @@ fun OtherEntryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onOtherContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -514,7 +514,7 @@ fun OtherEntryCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onOtherContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }
@@ -540,7 +540,7 @@ private fun BristolIndicator(type: Int) {
 @Composable
 private fun getBristolColor(type: Int) = when (type) {
     1, 2 -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-    3, 4 -> MaterialTheme.colorScheme.tertiary
+    3, 4 -> MaterialTheme.colorScheme.secondary
     else -> MaterialTheme.colorScheme.error
 }
 

@@ -57,7 +57,7 @@ fun StepCountCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = com.privatehealthjournal.ui.theme.biometricContainerColor()
         )
     ) {
         Row(
@@ -69,7 +69,7 @@ fun StepCountCard(
             Icon(
                 imageVector = Icons.Default.DirectionsWalk,
                 contentDescription = "Steps",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor(),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -88,21 +88,21 @@ fun StepCountCard(
                     text = NumberFormat.getIntegerInstance(Locale.getDefault()).format(entry.steps),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor()
                 )
                 if (entry.notes.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = entry.notes,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.7f)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatDay(entry.dateEpochDay),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.5f)
                 )
             }
             Column {
@@ -111,7 +111,7 @@ fun StepCountCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -119,7 +119,7 @@ fun StepCountCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        tint = com.privatehealthjournal.ui.theme.onBiometricContainerColor().copy(alpha = 0.6f)
                     )
                 }
             }

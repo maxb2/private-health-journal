@@ -20,7 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -180,7 +180,7 @@ fun HomeScreen(
                 Button(
                     onClick = { onNavigate(NavIntent.AddSymptom()) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = MaterialTheme.colorScheme.tertiary
                     )
                 ) {
                     Icon(
@@ -197,7 +197,7 @@ fun HomeScreen(
                     Button(
                         onClick = { medsMenuExpanded = true },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary
+                            containerColor = MaterialTheme.colorScheme.secondary
                         )
                     ) {
                         Icon(
@@ -239,7 +239,7 @@ fun HomeScreen(
                     Button(
                         onClick = { biometricsMenuExpanded = true },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                            containerColor = com.privatehealthjournal.ui.theme.biometricAccentColor()
                         )
                     ) {
                         Icon(
@@ -325,7 +325,7 @@ fun HomeScreen(
                     Button(
                         onClick = { otherMenuExpanded = true },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.outline
+                            containerColor = com.privatehealthjournal.ui.theme.otherAccentColor()
                         )
                     ) {
                         Icon(
@@ -402,11 +402,11 @@ fun HomeScreen(
                     Button(
                         onClick = { onNavigate(NavIntent.CycleTracking) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE91E63)
+                            containerColor = com.privatehealthjournal.ui.theme.cycleAccentColor()
                         )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Favorite,
+                            imageVector = Icons.Default.WaterDrop,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )

@@ -557,7 +557,7 @@ private fun DayRow(
                                 text = "−$dayStepCredits pts",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium,
-                                color = Color(0xFF4CAF50)
+                                color = MaterialTheme.colorScheme.secondary
                             )
                         }
                     }
@@ -606,7 +606,7 @@ private fun DayRow(
                                 text = if (exercise.pointCredit != null) "−${exercise.pointCredit} pts" else "—",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium,
-                                color = if (exercise.pointCredit != null) Color(0xFF4CAF50)
+                                color = if (exercise.pointCredit != null) MaterialTheme.colorScheme.secondary
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                             )
                         }
