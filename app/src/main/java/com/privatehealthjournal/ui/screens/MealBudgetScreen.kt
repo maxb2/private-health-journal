@@ -52,7 +52,8 @@ import com.privatehealthjournal.data.entity.MealWithDetails
 import com.privatehealthjournal.data.entity.OtherEntry
 import com.privatehealthjournal.data.entity.OtherEntryType
 import com.privatehealthjournal.data.entity.StepCountEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -63,15 +64,16 @@ import java.time.temporal.TemporalAdjusters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealBudgetScreen(
-    viewModel: LogViewModel,
+    stepsViewModel: StepsViewModel,
+    journalViewModel: JournalViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
-    val allMeals by viewModel.allMeals.collectAsState()
-    val allOtherEntries by viewModel.allOtherEntries.collectAsState()
-    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
-    val stepsPerPointCredit by viewModel.stepsPerPointCredit.collectAsState()
-    val dailyBudgetState by viewModel.dailyBudget.collectAsState()
+    val allMeals by journalViewModel.allMeals.collectAsState()
+    val allOtherEntries by journalViewModel.allOtherEntries.collectAsState()
+    val allStepCountEntries by stepsViewModel.allStepCountEntries.collectAsState()
+    val stepsPerPointCredit by stepsViewModel.stepsPerPointCredit.collectAsState()
+    val dailyBudgetState by journalViewModel.dailyBudget.collectAsState()
     val dailyBudget = dailyBudgetState
 
     fun stepCreditsForDay(day: LocalDate): Int {

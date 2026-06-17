@@ -1,8 +1,16 @@
 package com.privatehealthjournal.data.export
 
+import com.privatehealthjournal.data.entity.FlowIntensity
+import com.privatehealthjournal.data.entity.GlucoseMealContext
+import com.privatehealthjournal.data.entity.GlucoseUnit
 import com.privatehealthjournal.data.entity.MealType
 import com.privatehealthjournal.data.entity.OtherEntryType
-import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.data.entity.StepSource
+import com.privatehealthjournal.data.entity.WeightUnit
+import com.privatehealthjournal.data.repository.BiometricsRepository
+import com.privatehealthjournal.data.repository.JournalRepository
+import com.privatehealthjournal.data.repository.MedicationRepository
+import com.privatehealthjournal.data.repository.StepsRepository
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import io.mockk.coEvery
@@ -14,23 +22,31 @@ import org.junit.Test
 
 class DataImporterTest {
 
-    private lateinit var repository: LogRepository
+    private lateinit var journal: JournalRepository
+    private lateinit var medication: MedicationRepository
+    private lateinit var biometrics: BiometricsRepository
+    private lateinit var steps: StepsRepository
+    private lateinit var target: ImportTarget
     private val gson = Gson()
 
     @Before
     fun setup() {
-        repository = mockk(relaxed = true)
-        coEvery { repository.insertMeal(any(), any(), any(), any(), any()) } returns 1L
-        coEvery { repository.insertSymptom(any()) } returns 1L
-        coEvery { repository.insertMedication(any()) } returns 1L
-        coEvery { repository.insertOtherEntry(any()) } returns 1L
+        journal = mockk(relaxed = true)
+        medication = mockk(relaxed = true)
+        biometrics = mockk(relaxed = true)
+        steps = mockk(relaxed = true)
+        coEvery { journal.insertMeal(any(), any(), any(), any(), any()) } returns 1L
+        coEvery { journal.insertSymptom(any()) } returns 1L
+        coEvery { medication.insertMedication(any()) } returns 1L
+        coEvery { journal.insertOtherEntry(any()) } returns 1L
+        target = ImportTarget(journal, medication, biometrics, steps)
     }
 
     @Test
     fun `import empty data returns success with zero counts`() = runTest {
         val json = gson.toJson(ExportData())
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         val success = result as ImportResult.Success
@@ -45,7 +61,7 @@ class DataImporterTest {
     fun `import invalid JSON returns error`() = runTest {
         val invalidJson = "not valid json"
 
-        val result = DataImporter.import(invalidJson, repository)
+        val result = DataImporter.import(invalidJson, target)
 
         assertThat(result).isInstanceOf(ImportResult.Error::class.java)
     }
@@ -54,14 +70,14 @@ class DataImporterTest {
     fun `import null data returns error`() = runTest {
         val json = "null"
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Error::class.java)
         assertThat((result as ImportResult.Error).message).contains("Invalid data format")
     }
 
     @Test
-    fun `import meals calls repository`() = runTest {
+    fun `import meals calls journal repository`() = runTest {
         val exportData = ExportData(
             meals = listOf(
                 ExportedMeal(
@@ -75,12 +91,12 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         assertThat((result as ImportResult.Success).mealsImported).isEqualTo(1)
         coVerify {
-            repository.insertMeal(
+            journal.insertMeal(
                 mealType = MealType.BREAKFAST,
                 foods = listOf("Eggs", "Toast"),
                 tags = listOf("Healthy"),
@@ -105,11 +121,11 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         coVerify {
-            repository.insertMeal(
+            journal.insertMeal(
                 mealType = MealType.SNACK,
                 foods = any(),
                 tags = any(),
@@ -120,7 +136,7 @@ class DataImporterTest {
     }
 
     @Test
-    fun `import symptoms calls repository`() = runTest {
+    fun `import symptoms calls journal repository`() = runTest {
         val exportData = ExportData(
             symptoms = listOf(
                 ExportedSymptom(
@@ -134,12 +150,12 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         assertThat((result as ImportResult.Success).symptomsImported).isEqualTo(1)
         coVerify {
-            repository.insertSymptom(match {
+            journal.insertSymptom(match {
                 it.name == "Headache" &&
                     it.severity == 3 &&
                     it.notes == "After lunch" &&
@@ -164,16 +180,16 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         coVerify {
-            repository.insertSymptom(match { it.endTime == null })
+            journal.insertSymptom(match { it.endTime == null })
         }
     }
 
     @Test
-    fun `import medications calls repository`() = runTest {
+    fun `import medications calls medication repository`() = runTest {
         val exportData = ExportData(
             medications = listOf(
                 ExportedMedication(
@@ -186,12 +202,12 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         assertThat((result as ImportResult.Success).medicationsImported).isEqualTo(1)
         coVerify {
-            repository.insertMedication(match {
+            medication.insertMedication(match {
                 it.name == "Aspirin" &&
                     it.dosage == "500mg" &&
                     it.notes == "For headache" &&
@@ -201,7 +217,7 @@ class DataImporterTest {
     }
 
     @Test
-    fun `import other entries calls repository`() = runTest {
+    fun `import other entries calls journal repository`() = runTest {
         val exportData = ExportData(
             otherEntries = listOf(
                 ExportedOtherEntry(
@@ -215,12 +231,12 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         assertThat((result as ImportResult.Success).otherEntriesImported).isEqualTo(1)
         coVerify {
-            repository.insertOtherEntry(match {
+            journal.insertOtherEntry(match {
                 it.entryType == OtherEntryType.SLEEP &&
                     it.subType == "Night sleep" &&
                     it.value == "8 hours" &&
@@ -245,11 +261,11 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         coVerify {
-            repository.insertOtherEntry(match { it.entryType == OtherEntryType.OTHER })
+            journal.insertOtherEntry(match { it.entryType == OtherEntryType.OTHER })
         }
     }
 
@@ -274,7 +290,7 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Success::class.java)
         val success = result as ImportResult.Success
@@ -298,8 +314,293 @@ class DataImporterTest {
     }
 
     @Test
+    fun `import bowel movements calls journal repository`() = runTest {
+        val exportData = ExportData(
+            bowelMovements = listOf(
+                ExportedBowelMovement(bristolType = 4, notes = "normal", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat(result).isInstanceOf(ImportResult.Success::class.java)
+        assertThat((result as ImportResult.Success).bowelMovementsImported).isEqualTo(1)
+        coVerify {
+            journal.insertBowelMovement(match {
+                it.bristolType == 4 && it.notes == "normal" && it.timestamp == 1000L
+            })
+        }
+    }
+
+    @Test
+    fun `import blood pressure routes to biometrics repository`() = runTest {
+        val exportData = ExportData(
+            bloodPressureEntries = listOf(
+                ExportedBloodPressure(systolic = 120, diastolic = 80, pulse = 70, notes = "n", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).bloodPressureImported).isEqualTo(1)
+        coVerify {
+            biometrics.insertBloodPressure(match {
+                it.systolic == 120 && it.diastolic == 80 && it.pulse == 70
+            })
+        }
+    }
+
+    @Test
+    fun `import cholesterol routes to biometrics repository`() = runTest {
+        val exportData = ExportData(
+            cholesterolEntries = listOf(
+                ExportedCholesterol(total = 180, ldl = 100, hdl = 50, triglycerides = 150, notes = "", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).cholesterolImported).isEqualTo(1)
+        coVerify {
+            biometrics.insertCholesterol(match {
+                it.total == 180 && it.ldl == 100 && it.hdl == 50 && it.triglycerides == 150
+            })
+        }
+    }
+
+    @Test
+    fun `import weight routes to biometrics repository`() = runTest {
+        val exportData = ExportData(
+            weightEntries = listOf(
+                ExportedWeight(weight = 150.5, unit = "KG", notes = "", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).weightImported).isEqualTo(1)
+        coVerify {
+            biometrics.insertWeight(match {
+                it.weight == 150.5 && it.unit == WeightUnit.KG
+            })
+        }
+    }
+
+    @Test
+    fun `import invalid weight unit defaults to LB`() = runTest {
+        val exportData = ExportData(
+            weightEntries = listOf(
+                ExportedWeight(weight = 150.0, unit = "INVALID", notes = "", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        DataImporter.import(json, target)
+
+        coVerify { biometrics.insertWeight(match { it.unit == WeightUnit.LB }) }
+    }
+
+    @Test
+    fun `import SpO2 routes to biometrics repository`() = runTest {
+        val exportData = ExportData(
+            spO2Entries = listOf(
+                ExportedSpO2(spo2 = 98, pulse = 65, notes = "", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).spO2Imported).isEqualTo(1)
+        coVerify {
+            biometrics.insertSpO2(match { it.spo2 == 98 && it.pulse == 65 })
+        }
+    }
+
+    @Test
+    fun `import blood glucose routes to biometrics repository`() = runTest {
+        val exportData = ExportData(
+            bloodGlucoseEntries = listOf(
+                ExportedBloodGlucose(
+                    glucoseLevel = 95.0, unit = "MMOL_L", mealContext = "FASTING",
+                    notes = "", timestamp = 1000L
+                )
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).bloodGlucoseImported).isEqualTo(1)
+        coVerify {
+            biometrics.insertBloodGlucose(match {
+                it.glucoseLevel == 95.0 &&
+                    it.unit == GlucoseUnit.MMOL_L &&
+                    it.mealContext == GlucoseMealContext.FASTING
+            })
+        }
+    }
+
+    @Test
+    fun `import blood glucose invalid unit and mealContext fall back`() = runTest {
+        val exportData = ExportData(
+            bloodGlucoseEntries = listOf(
+                ExportedBloodGlucose(
+                    glucoseLevel = 95.0, unit = "INVALID", mealContext = "INVALID",
+                    notes = "", timestamp = 1000L
+                )
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        DataImporter.import(json, target)
+
+        coVerify {
+            biometrics.insertBloodGlucose(match {
+                it.unit == GlucoseUnit.MG_DL && it.mealContext == null
+            })
+        }
+    }
+
+    @Test
+    fun `import cycle entries route to journal repository`() = runTest {
+        val exportData = ExportData(
+            cycleEntries = listOf(
+                ExportedCycleEntry(flow = "HEAVY", symptoms = "cramps", notes = "n", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).cycleEntriesImported).isEqualTo(1)
+        coVerify {
+            journal.insertCycleEntry(match {
+                it.flow == FlowIntensity.HEAVY && it.symptoms == "cramps"
+            })
+        }
+    }
+
+    @Test
+    fun `import invalid cycle flow defaults to MEDIUM`() = runTest {
+        val exportData = ExportData(
+            cycleEntries = listOf(
+                ExportedCycleEntry(flow = "INVALID", symptoms = "", notes = "", timestamp = 1000L)
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        DataImporter.import(json, target)
+
+        coVerify { journal.insertCycleEntry(match { it.flow == FlowIntensity.MEDIUM }) }
+    }
+
+    @Test
+    fun `import step counts route to steps repository via upsert`() = runTest {
+        val exportData = ExportData(
+            stepCountEntries = listOf(
+                ExportedStepCount(
+                    dateEpochDay = 20_000L, steps = 8500, source = "HEALTH_CONNECT",
+                    notes = "", timestamp = 1000L
+                )
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target)
+
+        assertThat((result as ImportResult.Success).stepCountEntriesImported).isEqualTo(1)
+        coVerify {
+            steps.upsertStepCount(match {
+                it.dateEpochDay == 20_000L &&
+                    it.steps == 8500 &&
+                    it.source == StepSource.HEALTH_CONNECT
+            })
+        }
+    }
+
+    @Test
+    fun `import invalid step source defaults to MANUAL`() = runTest {
+        val exportData = ExportData(
+            stepCountEntries = listOf(
+                ExportedStepCount(
+                    dateEpochDay = 20_000L, steps = 8500, source = "INVALID",
+                    notes = "", timestamp = 1000L
+                )
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        DataImporter.import(json, target)
+
+        coVerify { steps.upsertStepCount(match { it.source == StepSource.MANUAL }) }
+    }
+
+    @Test
+    fun `import medication sets routes set reminders and logs to medication repository`() = runTest {
+        coEvery { medication.insertMedicationSet(any(), any()) } returns 42L
+
+        val exportData = ExportData(
+            medicationSets = listOf(
+                ExportedMedicationSet(
+                    name = "Evening",
+                    items = listOf(
+                        ExportedMedicationSetItem("Atorvastatin", "20mg"),
+                        ExportedMedicationSetItem("Metformin", "500mg")
+                    ),
+                    reminders = listOf(
+                        ExportedMedicationSetReminder(hour = 20, minute = 30, daysOfWeek = 127, enabled = true)
+                    ),
+                    logs = listOf(
+                        ExportedMedicationSetLog(timestamp = 2000L)
+                    )
+                )
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        val result = DataImporter.import(json, target) as ImportResult.Success
+
+        assertThat(result.medicationSetsImported).isEqualTo(1)
+        assertThat(result.medicationSetRemindersImported).isEqualTo(1)
+        assertThat(result.medicationSetLogsImported).isEqualTo(1)
+        coVerify {
+            medication.insertMedicationSet(
+                "Evening",
+                listOf("Atorvastatin" to "20mg", "Metformin" to "500mg")
+            )
+            medication.insertReminder(match {
+                it.setId == 42L && it.hour == 20 && it.minute == 30 && it.enabled
+            })
+            medication.insertMedicationSetLog(match {
+                it.setId == 42L && it.timestamp == 2000L
+            })
+        }
+    }
+
+    @Test
+    fun `meal import does not call other repositories`() = runTest {
+        val exportData = ExportData(
+            meals = listOf(
+                ExportedMeal("BREAKFAST", "", 1000L, listOf("Eggs"), emptyList())
+            )
+        )
+        val json = gson.toJson(exportData)
+
+        DataImporter.import(json, target)
+
+        coVerify(exactly = 0) { medication.insertMedication(any()) }
+        coVerify(exactly = 0) { biometrics.insertBloodPressure(any()) }
+        coVerify(exactly = 0) { steps.upsertStepCount(any()) }
+    }
+
+    @Test
     fun `import with repository exception returns error`() = runTest {
-        coEvery { repository.insertMeal(any(), any(), any(), any(), any()) } throws RuntimeException("Database error")
+        coEvery { journal.insertMeal(any(), any(), any(), any(), any()) } throws RuntimeException("Database error")
 
         val exportData = ExportData(
             meals = listOf(
@@ -308,7 +609,7 @@ class DataImporterTest {
         )
         val json = gson.toJson(exportData)
 
-        val result = DataImporter.import(json, repository)
+        val result = DataImporter.import(json, target)
 
         assertThat(result).isInstanceOf(ImportResult.Error::class.java)
         assertThat((result as ImportResult.Error).message).contains("Failed to import")

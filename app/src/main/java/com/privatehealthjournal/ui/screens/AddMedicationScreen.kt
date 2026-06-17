@@ -38,12 +38,12 @@ import com.privatehealthjournal.data.entity.MedicationEntry
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddMedicationScreen(
-    viewModel: LogViewModel,
+    viewModel: MedicationViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null,
     prefillName: String? = null
@@ -70,7 +70,7 @@ fun AddMedicationScreen(
     }
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingMedication()
         onNavigateBack()
     }
 
@@ -214,7 +214,7 @@ fun AddMedicationScreen(
                                 timestamp = timestamp
                             )
                         }
-                        viewModel.clearEditingState()
+                        viewModel.clearEditingMedication()
                         onNavigateBack()
                     }
                 },

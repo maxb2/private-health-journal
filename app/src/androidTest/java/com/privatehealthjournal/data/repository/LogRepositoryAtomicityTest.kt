@@ -1,11 +1,11 @@
 package com.privatehealthjournal.data.repository
 
 import androidx.room.Room
-import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.privatehealthjournal.data.AppDatabase
 import com.privatehealthjournal.data.entity.MedicationSet
+import com.privatehealthjournal.di.TransactionRunner
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -16,10 +16,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class LogRepositoryAtomicityTest {
+class MedicationRepositoryAtomicityTest {
 
     private lateinit var db: AppDatabase
-    private lateinit var repo: LogRepository
+    private lateinit var repo: MedicationRepository
 
     @Before
     fun setUp() {
@@ -27,14 +27,13 @@ class LogRepositoryAtomicityTest {
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
         ).allowMainThreadQueries().build()
-        repo = LogRepository(
-            db.mealDao(), db.symptomEntryDao(), db.bowelMovementDao(),
-            db.medicationDao(), db.otherEntryDao(), db.bloodPressureDao(),
-            db.cholesterolDao(), db.weightDao(), db.spO2Dao(),
-            db.bloodGlucoseDao(), db.medicationSetDao(),
-            db.medicationSetReminderDao(), db.medicationSetLogDao(),
-            db.cycleEntryDao(), db.stepCountDao(),
-            transaction = { block -> db.withTransaction { block() } }
+        val tx = TransactionRunner(db)
+        repo = MedicationRepository(
+            db.medicationDao(),
+            db.medicationSetDao(),
+            db.medicationSetReminderDao(),
+            db.medicationSetLogDao(),
+            tx,
         )
     }
 
@@ -51,8 +50,8 @@ class LogRepositoryAtomicityTest {
         repo.logMedicationSetAtomically(
             setId = setId,
             items = listOf(
-                LogRepository.MedicationSetItemSpec("Atorvastatin", "20mg"),
-                LogRepository.MedicationSetItemSpec("Metformin", "500mg")
+                MedicationRepository.MedicationSetItemSpec("Atorvastatin", "20mg"),
+                MedicationRepository.MedicationSetItemSpec("Metformin", "500mg")
             ),
             timestamp = timestamp,
             notes = "Logged from set: Evening"
@@ -77,7 +76,7 @@ class LogRepositoryAtomicityTest {
         val threw = try {
             repo.logMedicationSetAtomically(
                 setId = invalidSetId,
-                items = listOf(LogRepository.MedicationSetItemSpec("Atorvastatin", "20mg")),
+                items = listOf(MedicationRepository.MedicationSetItemSpec("Atorvastatin", "20mg")),
                 timestamp = 1L,
                 notes = "should not commit"
             )
@@ -87,7 +86,6 @@ class LogRepositoryAtomicityTest {
         }
 
         assertTrue("FK violation should have surfaced", threw)
-        // Neither the MedicationEntry rows nor the MedicationSetLog row should have committed.
         assertEquals(0, repo.allMedications.first().size)
         assertEquals(0, repo.getAllMedicationSetLogs().first().size)
     }

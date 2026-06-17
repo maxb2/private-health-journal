@@ -39,12 +39,12 @@ import com.privatehealthjournal.data.entity.WeightUnit
 import com.privatehealthjournal.ui.components.DateTimePicker
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddWeightScreen(
-    viewModel: LogViewModel,
+    viewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -71,7 +71,7 @@ fun AddWeightScreen(
     val isValid = weight.toDoubleOrNull() != null && weight.toDoubleOrNull()!! > 0
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingWeight()
         onNavigateBack()
     }
 
@@ -202,7 +202,7 @@ fun AddWeightScreen(
                             timestamp = timestamp
                         )
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingWeight()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

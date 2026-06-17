@@ -41,7 +41,7 @@ import com.privatehealthjournal.ui.components.DatePickerDialogWrapper
 import com.privatehealthjournal.ui.components.formatDate
 import com.privatehealthjournal.ui.components.EntryTopAppBar
 import com.privatehealthjournal.ui.components.rememberEditingEntry
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -49,7 +49,7 @@ import java.time.ZoneId
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddStepCountScreen(
-    viewModel: LogViewModel,
+    viewModel: StepsViewModel,
     onNavigateBack: () -> Unit,
     editId: Long? = null
 ) {
@@ -79,7 +79,7 @@ fun AddStepCountScreen(
     val isValid = stepsValue != null && stepsValue >= 0
 
     val handleBack = {
-        viewModel.clearEditingState()
+        viewModel.clearEditingStepCount()
         onNavigateBack()
     }
 
@@ -190,7 +190,7 @@ fun AddStepCountScreen(
                     } else {
                         viewModel.addStepCount(epochDay, stepsVal, notes.trim())
                     }
-                    viewModel.clearEditingState()
+                    viewModel.clearEditingStepCount()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

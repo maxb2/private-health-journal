@@ -50,7 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import com.privatehealthjournal.sensor.HealthConnectStepReader
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
+import com.privatehealthjournal.viewmodel.SettingsViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,20 +61,23 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: LogViewModel,
+    viewModel: SettingsViewModel,
+    stepsViewModel: StepsViewModel,
+    medicationViewModel: MedicationViewModel,
+    journalViewModel: JournalViewModel,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val allMeals by viewModel.allMeals.collectAsState()
-    val allSymptoms by viewModel.allSymptomEntries.collectAsState()
-    val allMedications by viewModel.allMedications.collectAsState()
-    val allOtherEntries by viewModel.allOtherEntries.collectAsState()
-    val dailyBudget by viewModel.dailyBudget.collectAsState()
-    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
-    val showStepCounting by viewModel.showStepCounting.collectAsState()
-    val stepSensorEnabled by viewModel.stepSensorEnabled.collectAsState()
-    val healthConnectEnabled by viewModel.healthConnectEnabled.collectAsState()
-    val stepsPerPointCredit by viewModel.stepsPerPointCredit.collectAsState()
+    val allMeals by journalViewModel.allMeals.collectAsState()
+    val allSymptoms by journalViewModel.allSymptomEntries.collectAsState()
+    val allMedications by medicationViewModel.allMedications.collectAsState()
+    val allOtherEntries by journalViewModel.allOtherEntries.collectAsState()
+    val dailyBudget by journalViewModel.dailyBudget.collectAsState()
+    val showCycleTracking by journalViewModel.showCycleTracking.collectAsState()
+    val showStepCounting by stepsViewModel.showStepCounting.collectAsState()
+    val stepSensorEnabled by stepsViewModel.stepSensorEnabled.collectAsState()
+    val healthConnectEnabled by stepsViewModel.healthConnectEnabled.collectAsState()
+    val stepsPerPointCredit by stepsViewModel.stepsPerPointCredit.collectAsState()
 
     var budgetText by remember { mutableStateOf("") }
     var stepsPerCreditText by remember { mutableStateOf("") }
@@ -87,7 +93,7 @@ fun SettingsScreen(
     val activityRecognitionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
-        viewModel.setStepSensorEnabled(granted)
+        stepsViewModel.setStepSensorEnabled(granted)
         if (!granted) {
             Toast.makeText(context, "Activity recognition permission required", Toast.LENGTH_SHORT).show()
         }
@@ -97,7 +103,7 @@ fun SettingsScreen(
         contract = PermissionController.createRequestPermissionResultContract()
     ) { granted ->
         val ok = granted.containsAll(HealthConnectStepReader.REQUIRED_PERMISSIONS)
-        viewModel.setHealthConnectEnabled(ok)
+        stepsViewModel.setHealthConnectEnabled(ok)
         if (!ok) {
             Toast.makeText(context, "Health Connect permission required", Toast.LENGTH_SHORT).show()
         }
@@ -216,7 +222,7 @@ fun SettingsScreen(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { viewModel.saveDailyBudget(budgetText.toIntOrNull()) }
+                    onDone = { journalViewModel.saveDailyBudget(budgetText.toIntOrNull()) }
                 ),
                 supportingText = if (budgetText.isNotBlank()) {
                     val daily = budgetText.toIntOrNull()
@@ -229,7 +235,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = { viewModel.saveDailyBudget(budgetText.toIntOrNull()) },
+                onClick = { journalViewModel.saveDailyBudget(budgetText.toIntOrNull()) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = budgetText.toIntOrNull() != null || (budgetText.isEmpty() && dailyBudget != null)
             ) {
@@ -254,7 +260,7 @@ fun SettingsScreen(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { viewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) }
+                    onDone = { stepsViewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) }
                 ),
                 supportingText = { Text("How many steps earn one credit. Leave blank to disable.") }
             )
@@ -262,7 +268,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { viewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) },
+                onClick = { stepsViewModel.saveStepsPerPointCredit(stepsPerCreditText.toIntOrNull()) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = stepsPerCreditText.toIntOrNull()?.let { it > 0 } == true ||
                     (stepsPerCreditText.isEmpty() && stepsPerPointCredit != null)
@@ -310,7 +316,7 @@ fun SettingsScreen(
                         }
                         Switch(
                             checked = showStepCounting,
-                            onCheckedChange = { viewModel.setShowStepCounting(it) }
+                            onCheckedChange = { stepsViewModel.setShowStepCounting(it) }
                         )
                     }
 
@@ -341,7 +347,7 @@ fun SettingsScreen(
                                             android.Manifest.permission.ACTIVITY_RECOGNITION
                                         )
                                     } else {
-                                        viewModel.setStepSensorEnabled(false)
+                                        stepsViewModel.setStepSensorEnabled(false)
                                     }
                                 }
                             )
@@ -376,14 +382,14 @@ fun SettingsScreen(
                                                 "Install Health Connect to enable.",
                                                 Toast.LENGTH_LONG
                                             ).show()
-                                            viewModel.setHealthConnectEnabled(false)
+                                            stepsViewModel.setHealthConnectEnabled(false)
                                         } else {
                                             hcPermissionLauncher.launch(
                                                 HealthConnectStepReader.REQUIRED_PERMISSIONS
                                             )
                                         }
                                     } else {
-                                        viewModel.setHealthConnectEnabled(false)
+                                        stepsViewModel.setHealthConnectEnabled(false)
                                     }
                                 }
                             )
@@ -428,7 +434,7 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = showCycleTracking,
-                        onCheckedChange = { viewModel.setShowCycleTracking(it) }
+                        onCheckedChange = { journalViewModel.setShowCycleTracking(it) }
                     )
                 }
             }

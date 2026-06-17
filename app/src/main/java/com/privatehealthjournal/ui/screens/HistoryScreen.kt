@@ -55,7 +55,10 @@ import com.privatehealthjournal.ui.components.StepCountCard
 import com.privatehealthjournal.ui.components.SymptomEntryCard
 import com.privatehealthjournal.ui.components.WeightCard
 import com.privatehealthjournal.ui.nav.NavIntent
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
+import com.privatehealthjournal.viewmodel.JournalViewModel
+import com.privatehealthjournal.viewmodel.MedicationViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -68,23 +71,26 @@ enum class FilterType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    viewModel: LogViewModel,
+    stepsViewModel: StepsViewModel,
+    biometricsViewModel: BiometricsViewModel,
+    medicationViewModel: MedicationViewModel,
+    journalViewModel: JournalViewModel,
     onNavigate: (NavIntent) -> Unit
 ) {
     val onNavigateBack = { onNavigate(NavIntent.Back) }
-    val allMeals by viewModel.allMeals.collectAsState()
-    val allSymptoms by viewModel.allSymptomEntries.collectAsState()
-    val allMedications by viewModel.allMedications.collectAsState()
-    val allOtherEntries by viewModel.allOtherEntries.collectAsState()
-    val allBloodPressure by viewModel.allBloodPressureEntries.collectAsState()
-    val allCholesterol by viewModel.allCholesterolEntries.collectAsState()
-    val allWeight by viewModel.allWeightEntries.collectAsState()
-    val allSpO2 by viewModel.allSpO2Entries.collectAsState()
-    val allBloodGlucose by viewModel.allBloodGlucoseEntries.collectAsState()
-    val allCycleEntries by viewModel.allCycleEntries.collectAsState()
-    val showCycleTracking by viewModel.showCycleTracking.collectAsState()
-    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
-    val showStepCounting by viewModel.showStepCounting.collectAsState()
+    val allMeals by journalViewModel.allMeals.collectAsState()
+    val allSymptoms by journalViewModel.allSymptomEntries.collectAsState()
+    val allMedications by medicationViewModel.allMedications.collectAsState()
+    val allOtherEntries by journalViewModel.allOtherEntries.collectAsState()
+    val allBloodPressure by biometricsViewModel.allBloodPressureEntries.collectAsState()
+    val allCholesterol by biometricsViewModel.allCholesterolEntries.collectAsState()
+    val allWeight by biometricsViewModel.allWeightEntries.collectAsState()
+    val allSpO2 by biometricsViewModel.allSpO2Entries.collectAsState()
+    val allBloodGlucose by biometricsViewModel.allBloodGlucoseEntries.collectAsState()
+    val allCycleEntries by journalViewModel.allCycleEntries.collectAsState()
+    val showCycleTracking by journalViewModel.showCycleTracking.collectAsState()
+    val allStepCountEntries by stepsViewModel.allStepCountEntries.collectAsState()
+    val showStepCounting by stepsViewModel.showStepCounting.collectAsState()
     var filterType by remember { mutableStateOf(FilterType.ALL) }
 
     Scaffold(
@@ -269,7 +275,7 @@ fun HistoryScreen(
                             when (entry) {
                                 is HistoryEntry.Meal -> MealEntryCard(
                                     meal = entry.entry,
-                                    onDelete = { viewModel.deleteMeal(entry.entry) },
+                                    onDelete = { journalViewModel.deleteMeal(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditMeal(entry.entry.meal.id)) }
                                 )
                                 is HistoryEntry.Symptom -> SymptomEntryCard(
@@ -278,52 +284,52 @@ fun HistoryScreen(
                                     notes = entry.entry.notes,
                                     startTime = entry.entry.startTime,
                                     endTime = entry.entry.endTime,
-                                    onDelete = { viewModel.deleteSymptom(entry.entry) },
+                                    onDelete = { journalViewModel.deleteSymptom(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditSymptom(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Other -> OtherEntryCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteOtherEntry(entry.entry) },
+                                    onDelete = { journalViewModel.deleteOtherEntry(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditOther(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Medication -> MedicationCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteMedication(entry.entry) },
+                                    onDelete = { medicationViewModel.deleteMedication(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditMedication(entry.entry.id)) }
                                 )
                                 is HistoryEntry.BloodPressure -> BloodPressureCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteBloodPressure(entry.entry) },
+                                    onDelete = { biometricsViewModel.deleteBloodPressure(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditBloodPressure(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Cholesterol -> CholesterolCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteCholesterol(entry.entry) },
+                                    onDelete = { biometricsViewModel.deleteCholesterol(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditCholesterol(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Weight -> WeightCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteWeight(entry.entry) },
+                                    onDelete = { biometricsViewModel.deleteWeight(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditWeight(entry.entry.id)) }
                                 )
                                 is HistoryEntry.SpO2 -> SpO2Card(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteSpO2(entry.entry) },
+                                    onDelete = { biometricsViewModel.deleteSpO2(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditSpO2(entry.entry.id)) }
                                 )
                                 is HistoryEntry.BloodGlucose -> BloodGlucoseCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteBloodGlucose(entry.entry) },
+                                    onDelete = { biometricsViewModel.deleteBloodGlucose(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditBloodGlucose(entry.entry.id)) }
                                 )
                                 is HistoryEntry.Cycle -> CycleEntryCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteCycleEntry(entry.entry) },
+                                    onDelete = { journalViewModel.deleteCycleEntry(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditCycleEntry(entry.entry.id)) }
                                 )
                                 is HistoryEntry.StepCount -> StepCountCard(
                                     entry = entry.entry,
-                                    onDelete = { viewModel.deleteStepCount(entry.entry) },
+                                    onDelete = { stepsViewModel.deleteStepCount(entry.entry) },
                                     onEdit = { onNavigate(NavIntent.EditStepCount(entry.entry.id)) }
                                 )
                             }

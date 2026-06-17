@@ -48,7 +48,8 @@ import com.privatehealthjournal.ui.components.WeightChart
 import com.privatehealthjournal.ui.components.WeightSummaryCard
 import com.privatehealthjournal.ui.utils.TimeRange
 import com.privatehealthjournal.ui.utils.filterByTimeRange
-import com.privatehealthjournal.viewmodel.LogViewModel
+import com.privatehealthjournal.viewmodel.BiometricsViewModel
+import com.privatehealthjournal.viewmodel.StepsViewModel
 
 enum class BiometricTab(val title: String) {
     WEIGHT("Weight"),
@@ -62,19 +63,20 @@ enum class BiometricTab(val title: String) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BiometricsChartScreen(
-    viewModel: LogViewModel,
+    stepsViewModel: StepsViewModel,
+    biometricsViewModel: BiometricsViewModel,
     onNavigateBack: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedTimeRange by remember { mutableStateOf(TimeRange.THIRTY_DAYS) }
 
-    val allWeightEntries by viewModel.allWeightEntries.collectAsState()
-    val allBloodPressureEntries by viewModel.allBloodPressureEntries.collectAsState()
-    val allCholesterolEntries by viewModel.allCholesterolEntries.collectAsState()
-    val allSpO2Entries by viewModel.allSpO2Entries.collectAsState()
-    val allBloodGlucoseEntries by viewModel.allBloodGlucoseEntries.collectAsState()
-    val allStepCountEntries by viewModel.allStepCountEntries.collectAsState()
-    val showStepCounting by viewModel.showStepCounting.collectAsState()
+    val allWeightEntries by biometricsViewModel.allWeightEntries.collectAsState()
+    val allBloodPressureEntries by biometricsViewModel.allBloodPressureEntries.collectAsState()
+    val allCholesterolEntries by biometricsViewModel.allCholesterolEntries.collectAsState()
+    val allSpO2Entries by biometricsViewModel.allSpO2Entries.collectAsState()
+    val allBloodGlucoseEntries by biometricsViewModel.allBloodGlucoseEntries.collectAsState()
+    val allStepCountEntries by stepsViewModel.allStepCountEntries.collectAsState()
+    val showStepCounting by stepsViewModel.showStepCounting.collectAsState()
 
     val filteredWeightEntries = remember(allWeightEntries, selectedTimeRange) {
         filterByTimeRange(allWeightEntries, selectedTimeRange) { it.timestamp }

@@ -20,14 +20,24 @@ import com.privatehealthjournal.data.entity.StepSource
 import com.privatehealthjournal.data.entity.SymptomEntry
 import com.privatehealthjournal.data.entity.WeightEntry
 import com.privatehealthjournal.data.entity.WeightUnit
-import com.privatehealthjournal.data.repository.LogRepository
+import com.privatehealthjournal.data.repository.BiometricsRepository
+import com.privatehealthjournal.data.repository.JournalRepository
+import com.privatehealthjournal.data.repository.MedicationRepository
+import com.privatehealthjournal.data.repository.StepsRepository
 import com.google.gson.Gson
+
+class ImportTarget(
+    val journal: JournalRepository,
+    val medication: MedicationRepository,
+    val biometrics: BiometricsRepository,
+    val steps: StepsRepository,
+)
 
 object DataImporter {
 
     private val gson = Gson()
 
-    suspend fun import(json: String, repository: LogRepository): ImportResult {
+    suspend fun import(json: String, target: ImportTarget): ImportResult {
         return try {
             val exportData = gson.fromJson(json, ExportData::class.java)
                 ?: return ImportResult.Error("Invalid data format")
@@ -55,7 +65,7 @@ object DataImporter {
                 } catch (e: IllegalArgumentException) {
                     MealType.SNACK
                 }
-                repository.insertMeal(
+                target.journal.insertMeal(
                     mealType = mealType,
                     foods = meal.foods,
                     tags = meal.tags,
@@ -68,7 +78,7 @@ object DataImporter {
 
             // Import symptoms
             exportData.symptoms.forEach { symptom ->
-                repository.insertSymptom(
+                target.journal.insertSymptom(
                     SymptomEntry(
                         name = symptom.name,
                         severity = symptom.severity,
@@ -82,7 +92,7 @@ object DataImporter {
 
             // Import bowel movements
             exportData.bowelMovements.forEach { bm ->
-                repository.insertBowelMovement(
+                target.journal.insertBowelMovement(
                     BowelMovementEntry(
                         bristolType = bm.bristolType,
                         notes = bm.notes,
@@ -94,7 +104,7 @@ object DataImporter {
 
             // Import medications
             exportData.medications.forEach { med ->
-                repository.insertMedication(
+                target.medication.insertMedication(
                     MedicationEntry(
                         name = med.name,
                         dosage = med.dosage,
@@ -112,7 +122,7 @@ object DataImporter {
                 } catch (e: IllegalArgumentException) {
                     OtherEntryType.OTHER
                 }
-                repository.insertOtherEntry(
+                target.journal.insertOtherEntry(
                     OtherEntry(
                         entryType = entryType,
                         subType = other.subType,
@@ -127,7 +137,7 @@ object DataImporter {
 
             // Import blood pressure entries
             exportData.bloodPressureEntries.forEach { bp ->
-                repository.insertBloodPressure(
+                target.biometrics.insertBloodPressure(
                     BloodPressureEntry(
                         systolic = bp.systolic,
                         diastolic = bp.diastolic,
@@ -141,7 +151,7 @@ object DataImporter {
 
             // Import cholesterol entries
             exportData.cholesterolEntries.forEach { chol ->
-                repository.insertCholesterol(
+                target.biometrics.insertCholesterol(
                     CholesterolEntry(
                         total = chol.total,
                         ldl = chol.ldl,
@@ -161,7 +171,7 @@ object DataImporter {
                 } catch (e: IllegalArgumentException) {
                     WeightUnit.LB
                 }
-                repository.insertWeight(
+                target.biometrics.insertWeight(
                     WeightEntry(
                         weight = weight.weight,
                         unit = unit,
@@ -174,7 +184,7 @@ object DataImporter {
 
             // Import SpO2 entries
             exportData.spO2Entries.forEach { spo2 ->
-                repository.insertSpO2(
+                target.biometrics.insertSpO2(
                     SpO2Entry(
                         spo2 = spo2.spo2,
                         pulse = spo2.pulse,
@@ -199,7 +209,7 @@ object DataImporter {
                         null
                     }
                 }
-                repository.insertBloodGlucose(
+                target.biometrics.insertBloodGlucose(
                     BloodGlucoseEntry(
                         glucoseLevel = bg.glucoseLevel,
                         unit = unit,
@@ -214,11 +224,11 @@ object DataImporter {
             // Import medication sets (with nested reminders + logs)
             exportData.medicationSets.forEach { exportedSet ->
                 val items = exportedSet.items.map { it.name to it.dosage }
-                val newSetId = repository.insertMedicationSet(exportedSet.name, items)
+                val newSetId = target.medication.insertMedicationSet(exportedSet.name, items)
                 medicationSetsImported++
 
                 exportedSet.reminders.forEach { reminder ->
-                    repository.insertReminder(
+                    target.medication.insertReminder(
                         MedicationSetReminder(
                             setId = newSetId,
                             hour = reminder.hour,
@@ -231,7 +241,7 @@ object DataImporter {
                 }
 
                 exportedSet.logs.forEach { log ->
-                    repository.insertMedicationSetLog(
+                    target.medication.insertMedicationSetLog(
                         MedicationSetLog(setId = newSetId, timestamp = log.timestamp)
                     )
                     medicationSetLogsImported++
@@ -245,7 +255,7 @@ object DataImporter {
                 } catch (e: IllegalArgumentException) {
                     FlowIntensity.MEDIUM
                 }
-                repository.insertCycleEntry(
+                target.journal.insertCycleEntry(
                     CycleEntry(
                         flow = flow,
                         symptoms = entry.symptoms,
@@ -263,7 +273,7 @@ object DataImporter {
                 } catch (e: IllegalArgumentException) {
                     StepSource.MANUAL
                 }
-                repository.upsertStepCount(
+                target.steps.upsertStepCount(
                     StepCountEntry(
                         dateEpochDay = entry.dateEpochDay,
                         steps = entry.steps,
