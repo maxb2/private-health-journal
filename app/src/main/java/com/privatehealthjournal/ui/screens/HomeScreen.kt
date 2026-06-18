@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Restaurant
@@ -35,25 +37,37 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.LayoutDirection
+import com.privatehealthjournal.R
 import com.privatehealthjournal.data.entity.BloodPressureEntry
 import com.privatehealthjournal.data.entity.CholesterolEntry
 import com.privatehealthjournal.data.entity.CycleEntry
@@ -81,6 +95,7 @@ import com.privatehealthjournal.viewmodel.BiometricsViewModel
 import com.privatehealthjournal.viewmodel.JournalViewModel
 import com.privatehealthjournal.viewmodel.MedicationViewModel
 import com.privatehealthjournal.viewmodel.StepsViewModel
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -113,6 +128,49 @@ fun HomeScreen(
     var biometricsMenuExpanded by remember { mutableStateOf(false) }
     var otherMenuExpanded by remember { mutableStateOf(false) }
 
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    val drawerItems = listOf(
+        Triple("Meal Budget", Icons.Default.Savings, NavIntent.MealBudget),
+        Triple("Calendar", Icons.Default.CalendarMonth, NavIntent.Calendar),
+        Triple("View Charts", Icons.Default.ShowChart, NavIntent.BiometricsChart),
+        Triple("History", Icons.Default.History, NavIntent.History),
+        Triple("Settings", Icons.Default.Settings, NavIntent.Settings),
+    )
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                ModalDrawerSheet {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Private Health Journal",
+                        modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    HorizontalDivider()
+                    Spacer(Modifier.height(8.dp))
+                    drawerItems.forEach { (label, icon, intent) ->
+                        NavigationDrawerItem(
+                            icon = { Icon(icon, contentDescription = null) },
+                            label = { Text(label) },
+                            selected = false,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onNavigate(intent)
+                            },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                }
+            }
+        }
+    ) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -122,29 +180,20 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold
                     )
                 },
+                navigationIcon = {
+                    Image(
+                        painter = painterResource(R.drawable.ic_launcher_foreground),
+                        contentDescription = "App logo",
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(48.dp)
+                    )
+                },
                 actions = {
-                    IconButton(onClick = { onNavigate(NavIntent.MealBudget) }) {
+                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
                         Icon(
-                            imageVector = Icons.Default.Savings,
-                            contentDescription = "Meal Budget"
-                        )
-                    }
-                    IconButton(onClick = { onNavigate(NavIntent.Calendar) }) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "Calendar"
-                        )
-                    }
-                    IconButton(onClick = { onNavigate(NavIntent.History) }) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = "History"
-                        )
-                    }
-                    IconButton(onClick = { onNavigate(NavIntent.Settings) }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Open menu"
                         )
                     }
                 },
@@ -309,20 +358,6 @@ fun HomeScreen(
                                 }
                             )
                         }
-                        HorizontalDivider()
-                        DropdownMenuItem(
-                            text = { Text("View Charts") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.ShowChart,
-                                    contentDescription = null
-                                )
-                            },
-                            onClick = {
-                                biometricsMenuExpanded = false
-                                onNavigate(NavIntent.BiometricsChart)
-                            }
-                        )
                     }
                 }
 
@@ -599,6 +634,9 @@ fun HomeScreen(
                 }
             }
         }
+    }
+    }
+    }
     }
 }
 
